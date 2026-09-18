@@ -1,0 +1,6 @@
+{
+  "name": "MandiSync — Smart Agricultural Queue & IoT Telemetry",
+  "description": "Smart agricultural queue management, dynamic slot allocation, UHF RFID gate authentication, and Arduino/ESP32 weighbridge telemetry.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
