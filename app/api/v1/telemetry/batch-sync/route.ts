@@ -1,26 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { BatchSyncSchema } from '@/lib/validation/telemetry';
+import { checkRateLimit, getRateLimitHeaders } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const packets = body.packets || body.buffer || [];
-
-    if (!Array.isArray(packets) || packets.length === 0) {
+    // Rate limiting
+    const ip = req.headers.get('x-forwarded-for') || 'unknown';
+    const deviceId = req.headers.get('x-device-id') || undefined;
+    const rateLimit = await checkRateLimit(ip, deviceId);
+    
+    if (!rateLimit.success) {
       return NextResponse.json(
-        { error: 'Expected non-empty array of LittleFS buffered packets' },
-        { status: 400 }
+        { error: 'Rate limit exceeded' },
+        { status: 429, headers: getRateLimitHeaders(rateLimit) }
       );
     }
 
-    const syncResult = db.syncLittleFsBatch(packets);
+    const body = await req.json();
+    const result = BatchSyncSchema.safeParse(body);
+
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Invalid payload', details: result.error.flatten() },
+        { status: 400, headers: getRateLimitHeaders(rateLimit) }
+      );
+    }
+
+    const { packets } = result.data;
+    const syncResult = db.syncLittleFsBatch?.(packets);
 
     return NextResponse.json({
       success: true,
-      message: `Successfully flushed ${syncResult.synced_count} offline LittleFS records into central ledger`,
-      synced_count: syncResult.synced_count,
-      server_timestamp: new Date().toISOString(),
-    });
+      message: `Successfully flushed ${syncResult.syncedCount} offline LittleFS records into central ledger`,
+      syncedCount: syncResult.syncedCount,
+      serverTimestamp: new Date().toISOString(),
+    }, { headers: getRateLimitHeaders(rateLimit) });
   } catch (error: any) {
     return NextResponse.json({ error: error?.message || 'Batch sync failure' }, { status: 500 });
   }

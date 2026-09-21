@@ -1,6 +1,10 @@
 import crypto from 'crypto';
 
-const HMAC_SECRET = process.env.MANDI_HMAC_SECRET || 'mandisync_production_master_secret_2026';
+const HMAC_SECRET = process.env.MANDI_HMAC_SECRET;
+if (!HMAC_SECRET) {
+  throw new Error('MANDI_HMAC_SECRET environment variable is required');
+}
+const HMAC_KEY: crypto.KeyObject | string = HMAC_SECRET;
 
 /**
  * Generate cryptographically signed HMAC-SHA256 token for digital gate pass
@@ -15,7 +19,7 @@ export function generateHmacGateToken(payload: {
   createdAt: string;
 }): string {
   const serialized = `${payload.farmerId}|${payload.mandiId}|${payload.slotId}|${payload.cropType}|${payload.rfidTag}|${payload.createdAt}`;
-  const hmac = crypto.createHmac('sha256', HMAC_SECRET);
+  const hmac = crypto.createHmac('sha256', HMAC_KEY);
   hmac.update(serialized);
   return hmac.digest('hex');
 }

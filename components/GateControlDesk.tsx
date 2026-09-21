@@ -18,12 +18,12 @@ import {
 } from 'lucide-react';
 
 interface GateControlDeskProps {
-  bookings: Booking[];
-  logs: TelemetryLog[];
-  onRefreshData: () => void;
+  bookings?: Booking[];
+  logs?: TelemetryLog[];
+  onRefreshData?: () => void;
 }
 
-export function GateControlDesk({ bookings, logs, onRefreshData }: GateControlDeskProps) {
+export function GateControlDesk({ bookings = [], logs = [], onRefreshData }: GateControlDeskProps) {
   const [rfidInput, setRfidInput] = useState('UHF-TAG-891024');
   const [isVerifying, setIsVerifying] = useState(false);
   const [gateStatus, setGateStatus] = useState<'IDLE' | 'OPEN' | 'DENIED'>('IDLE');
@@ -39,8 +39,8 @@ export function GateControlDesk({ bookings, logs, onRefreshData }: GateControlDe
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          rfid_tag: tagToScan,
-          device_id: 'ESP32-GATE-DESK-01',
+          rfidTag: tagToScan,
+          deviceId: 'ESP32-GATE-DESK-01',
         }),
       });
 
@@ -65,7 +65,7 @@ export function GateControlDesk({ bookings, logs, onRefreshData }: GateControlDe
         }, 4000);
       }
 
-      onRefreshData();
+      onRefreshData?.();
     } catch (err) {
       console.error(err);
       hardwareAudio.playBuzzerError();
@@ -76,13 +76,13 @@ export function GateControlDesk({ bookings, logs, onRefreshData }: GateControlDe
   };
 
   const gateLogs = logs.filter(
-    (l) => l.sensor_type === 'RFID_UHF' || l.sensor_type === 'SERVO_BARRIER'
+    (l) => l.type === 'RFID_UHF' || l.type === 'SERVO_BARRIER'
   );
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
       <div className="lg:col-span-7 space-y-5">
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4">
+        <div className="bg-glass border-glass rounded-glassy shadow-glassy p-5 space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
@@ -157,7 +157,7 @@ export function GateControlDesk({ bookings, logs, onRefreshData }: GateControlDe
             </div>
           </div>
 
-          <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <div className="space-y-3 bg-secondaryClay p-4 rounded-xl border border-slate-200">
             <div className="text-xs font-semibold text-slate-800">
               Simulate UHF Tag Detection via ESP32 Hardware:
             </div>
@@ -190,13 +190,13 @@ export function GateControlDesk({ bookings, logs, onRefreshData }: GateControlDe
                     key={b.id}
                     type="button"
                     onClick={() => {
-                      setRfidInput(b.rfid_tag);
-                      handleSimulateScan(b.rfid_tag);
+                      setRfidInput(b.rfidTag);
+                      handleSimulateScan(b.rfidTag);
                     }}
                     className="text-[11px] px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-md font-mono flex items-center gap-1 cursor-pointer"
                   >
-                    <span>{b.rfid_tag}</span>
-                    <span className="text-slate-400">({b.farmer_name.split(' ')[0]})</span>
+                    <span>{b.rfidTag}</span>
+                    <span className="text-slate-400">({b.farmerName.split(' ')[0]})</span>
                   </button>
                 ))}
                 <button
@@ -231,10 +231,10 @@ export function GateControlDesk({ bookings, logs, onRefreshData }: GateControlDe
               </div>
               {verifyResult.booking && (
                 <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] pt-2 border-t border-emerald-200/60 font-mono">
-                  <div>Farmer: {verifyResult.booking.farmer_name}</div>
-                  <div>Crop: {verifyResult.booking.crop_type}</div>
-                  <div>Plate: {verifyResult.booking.vehicle_number}</div>
-                  <div>Slot: {verifyResult.booking.slot_window}</div>
+                  <div>Farmer: {verifyResult.booking.farmerName}</div>
+                  <div>Crop: {verifyResult.booking.cropType}</div>
+                  <div>Plate: {verifyResult.booking.vehicleNumber}</div>
+                  <div>Slot: {verifyResult.booking.slot?.windowStart && verifyResult.booking.slot?.windowEnd ? `${verifyResult.booking.slot.windowStart} - ${verifyResult.booking.slot.windowEnd}` : 'No slot'}</div>
                 </div>
               )}
             </div>
@@ -243,7 +243,7 @@ export function GateControlDesk({ bookings, logs, onRefreshData }: GateControlDe
       </div>
 
       <div className="lg:col-span-5 space-y-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-3">
+        <div className="bg-glass border-glass rounded-glassy shadow-glassy p-4 shadow-glass space-y-3">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
             <h3 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
               <Terminal className="w-4 h-4 text-slate-600" />
@@ -260,20 +260,20 @@ export function GateControlDesk({ bookings, logs, onRefreshData }: GateControlDe
             ) : (
               gateLogs.map((log) => (
                 <div key={log.id} className="leading-relaxed border-b border-slate-900 pb-1">
-                  <span className="text-slate-500">[{log.timestamp.split('T')[1].slice(0, 8)}]</span>{' '}
+                  <span className="text-slate-500">[{log.createdAt.toISOString().split('T')[1].slice(0, 8)}]</span>{' '}
                   <span
                     className={
-                      log.status === 'SUCCESS'
+                      log.type === 'RFID_UHF'
                         ? 'text-emerald-400 font-bold'
-                        : log.status === 'WARNING'
-                        ? 'text-amber-400'
-                        : 'text-rose-400'
+                        : log.type === 'SERVO_BARRIER'
+                        ? 'text-blue-400'
+                        : 'text-amber-400'
                     }
                   >
-                    [{log.sensor_type}]
+                    [{log.type}]
                   </span>{' '}
-                  <span className="text-slate-300 font-semibold">{log.action}:</span>{' '}
-                  <span className="text-slate-400">{log.raw_payload}</span>
+                  <span className="text-slate-300 font-semibold">Event:</span>{' '}
+                  <span className="text-slate-400">{JSON.stringify(log)}</span>
                 </div>
               ))
             )}

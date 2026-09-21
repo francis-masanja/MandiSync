@@ -12,7 +12,7 @@
   3. Push to a branch called `setup/base`.
 - **Why:** Gives everybody a safe starting point.
 
-**Baby Summary:** Install, commit, push – we’re ready to play!
+**Baby Summary:** Install, commit, push – we're ready to play!
 
 ---
 
@@ -44,30 +44,18 @@
 
 ---
 
-## 4️⃣ Optional AI / Gemini Integration (Baby Version)
-- **What to make (optional):**
-  - A lazy‑load wrapper (`lib/ai.ts`) that only imports `@google/genai` when an env flag `ENABLE_GEMINI=true` is set.
-  - Mock implementation for local testing.
-- **How:**
-  - `export async function getGenAI(){ if(process.env.ENABLE_GEMINI!=="true") return null; const {GoogleGenAI}=await import('@google/genai'); return new GoogleGenAI({apiKey:process.env.GEMINI_API_KEY}); }`
-  - Add a test that verifies the function returns `null` when the flag is off.
-
-**Baby Summary:** If you ever need AI, add a tiny optional piece that turns on only with a flag.
-
----
-
-## 5️⃣ CI/CD & Release Pipeline (Baby Version)
+## 4️⃣ CI/CD & Release Pipeline (Baby Version)
 - **What to set up:**
   - GitHub Actions workflow (`.github/workflows/ci.yml`) already added.
   - Optional release workflow that builds the app and publishes a Docker image or Vercel preview.
 - **How:**
   - Add a new workflow `release.yml` that triggers on tag pushes, runs `npm run build`, then `docker build` and pushes to Docker Hub.
 
-**Baby Summary:** CI already checks our code; later we’ll add a tiny release step to ship it.
+**Baby Summary:** CI already checks our code; later we'll add a tiny release step to ship it.
 
 ---
 
-## 6️⃣ Monitoring & Observability (Baby Version)
+## 5️⃣ Monitoring & Observability (Baby Version)
 - **What to add:**
   - Basic request logger (e.g., `morgan` or a custom Next.js logger).
   - Export metrics like queue length and weigh‑bridge status to a simple JSON endpoint (`/api/v1/metrics`).
@@ -75,11 +63,11 @@
   - Install `morgan`, add middleware in `app/api/v1/queue/status/route.ts`.
   - Create `app/api/v1/metrics/route.ts` that returns the same `metrics` object from the queue status.
 
-**Baby Summary:** Log what’s happening and expose a tiny metrics endpoint.
+**Baby Summary:** Log what's happening and expose a tiny metrics endpoint.
 
 ---
 
-## 7️⃣ Continuous Improvement (Baby Version)
+## 6️⃣ Continuous Improvement (Baby Version)
 - **What to do:**
   - Run `npm audit` weekly, update deps.
   - Collect user feedback from the Farmer portal and iterate.

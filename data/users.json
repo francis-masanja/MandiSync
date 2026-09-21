@@ -1,0 +1,23 @@
+[
+  {
+    "id": "U1",
+    "name": "Farmer Demo",
+    "email": "farmer@example.com",
+    "role": "farmer",
+    "passwordHash": "$2b$10$rOFaPl2tTaAkaL0GG8wI8eaP4ZxKiIx1KfjiVdAHp7ZnNvMNm1VXW"
+  },
+  {
+    "id": "U2",
+    "name": "Operator Demo",
+    "email": "operator@example.com",
+    "role": "operator",
+    "passwordHash": "$2b$10$mpIFwrvsyZAeaI1RqGHZme7l.vZqaOgL7d2gtto5iuUc92VRzGqX2"
+  },
+  {
+    "id": "U3",
+    "name": "Admin Demo",
+    "email": "admin@example.com",
+    "role": "admin",
+    "passwordHash": "$2b$10$G2dTj6ESO7MqdMB3/YstxOQq9oMtpjs4tmqtDDh3IV29ltGpt7yaK"
+  }
+]

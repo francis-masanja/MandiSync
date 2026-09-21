@@ -25,7 +25,7 @@ import {
 interface InteractiveDemoModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onRefreshData: () => void;
+  onRefreshData?: () => void;
 }
 
 export function InteractiveDemoModal({
@@ -100,7 +100,7 @@ export function InteractiveDemoModal({
 
     setP1State('SLOT_RESERVED');
     hardwareAudio.playBuzzerSuccess();
-    onRefreshData();
+    onRefreshData?.();
   };
 
   // Phase 2 trigger
@@ -122,7 +122,7 @@ export function InteractiveDemoModal({
           device_id: 'ESP32-GATE-NODE-01',
         }),
       });
-      onRefreshData();
+      onRefreshData?.();
     } catch (e) {
       console.error(e);
     }
@@ -149,7 +149,7 @@ export function InteractiveDemoModal({
           device_id: 'ESP32-SCALE-NODE-01',
         }),
       });
-      onRefreshData();
+      onRefreshData?.();
     } catch (e) {
       console.error(e);
     }
@@ -173,7 +173,7 @@ export function InteractiveDemoModal({
       });
       setWeighStep('COMPLETED');
       hardwareAudio.playBuzzerSuccess();
-      onRefreshData();
+      onRefreshData?.();
     } catch (e) {
       console.error(e);
     }
@@ -203,7 +203,7 @@ export function InteractiveDemoModal({
           source: 'LITTLEFS_BUFFER',
         }),
       });
-      onRefreshData();
+      onRefreshData?.();
     } catch (e) {
       console.error(e);
     }
@@ -211,9 +211,9 @@ export function InteractiveDemoModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+      <div className="bg-glass border-glass rounded-glassy shadow-glassy w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
         {/* Modal Header */}
-        <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+        <div className="p-4 sm:p-5 border-b border-slate-200 bg-secondaryClay flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-emerald-600 text-white rounded-xl shadow-2xs">
               <Sparkles className="w-5 h-5" />
@@ -238,7 +238,7 @@ export function InteractiveDemoModal({
         </div>
 
         {/* Phase Stepper Pills */}
-        <div className="grid grid-cols-4 border-b border-slate-200 bg-white">
+        <div className="grid grid-cols-4 border-b border-slate-200 bg-glass border-glass rounded-glassy">
           {[
             { phase: 1, title: 'Phase 1: Home', subtitle: 'GPS & Slot Pass' },
             { phase: 2, title: 'Phase 2: Gate', subtitle: 'RFID & Barrier' },
@@ -252,7 +252,7 @@ export function InteractiveDemoModal({
               className={`p-3 text-left border-r last:border-r-0 transition-colors cursor-pointer ${
                 currentPhase === item.phase
                   ? 'bg-emerald-50/80 border-b-2 border-b-emerald-600 text-emerald-950 font-bold'
-                  : 'hover:bg-slate-50 text-slate-600'
+                  : 'hover:bg-secondaryClay text-slate-600'
               }`}
             >
               <div className="text-xs">{item.title}</div>
@@ -266,7 +266,7 @@ export function InteractiveDemoModal({
           {/* PHASE 1 */}
           {currentPhase === 1 && (
             <div className="space-y-4">
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+              <div className="bg-secondaryClay p-4 rounded-xl border border-slate-200 space-y-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100/60 px-2 py-0.5 rounded">
                   Screen 1 to 4 Simulation
                 </span>
@@ -342,7 +342,7 @@ export function InteractiveDemoModal({
           {/* PHASE 2 */}
           {currentPhase === 2 && (
             <div className="space-y-4">
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+              <div className="bg-secondaryClay p-4 rounded-xl border border-slate-200 space-y-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-100/60 px-2 py-0.5 rounded">
                   Phase 2: At Mandi Gate
                 </span>
@@ -398,7 +398,7 @@ export function InteractiveDemoModal({
                     </button>
                   </div>
 
-                  <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200 text-[11px] font-mono text-slate-600">
+                  <div className="p-2.5 bg-secondaryClay rounded-lg border border-slate-200 text-[11px] font-mono text-slate-600">
                     <div>TAG: UHF-DEMO-771</div>
                     <div>RESPONSE: 200 OK (VALID_SLOT)</div>
                     <div>RELAY PIN 18: HIGH (15000ms)</div>
@@ -429,7 +429,7 @@ export function InteractiveDemoModal({
           {/* PHASE 3 */}
           {currentPhase === 3 && (
             <div className="space-y-4">
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+              <div className="bg-secondaryClay p-4 rounded-xl border border-slate-200 space-y-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100/60 px-2 py-0.5 rounded">
                   Phase 3: At Mandi Weighbridge
                 </span>
@@ -480,7 +480,7 @@ export function InteractiveDemoModal({
                     </button>
                   </div>
 
-                  <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200 text-xs font-mono space-y-1">
+                  <div className="p-2.5 bg-secondaryClay rounded-lg border border-slate-200 text-xs font-mono space-y-1">
                     <div className="flex justify-between">
                       <span className="text-slate-500">Gross Weight:</span>
                       <strong>6,800 kg</strong>
@@ -520,7 +520,7 @@ export function InteractiveDemoModal({
           {/* PHASE 4 */}
           {currentPhase === 4 && (
             <div className="space-y-4">
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+              <div className="bg-secondaryClay p-4 rounded-xl border border-slate-200 space-y-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-purple-700 bg-purple-100/60 px-2 py-0.5 rounded">
                   Phase 4: Fault Tolerance & Digital Procurement Receipt
                 </span>

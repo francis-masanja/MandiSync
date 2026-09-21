@@ -18,12 +18,12 @@ import {
 } from 'lucide-react';
 
 interface HardwareBenchProps {
-  bookings: Booking[];
-  logs: TelemetryLog[];
-  onRefreshData: () => void;
+  bookings?: Booking[];
+  logs?: TelemetryLog[];
+  onRefreshData?: () => void;
 }
 
-export function HardwareBench({ bookings, logs, onRefreshData }: HardwareBenchProps) {
+export function HardwareBench({ bookings = [], logs = [], onRefreshData }: HardwareBenchProps) {
   const [activeBookingId, setActiveBookingId] = useState<string>(
     bookings.find((b) => b.status === 'GATE_VERIFIED')?.id || bookings[0]?.id || ''
   );
@@ -59,12 +59,12 @@ export function HardwareBench({ bookings, logs, onRefreshData }: HardwareBenchPr
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          booking_id: selectedBooking?.id,
-          rfid_tag: selectedBooking?.rfid_tag,
-          weight_kg: weightInput,
-          measurement_type: scaleMode,
-          moisture_percentage: moistureInput,
-          device_id: 'ESP32-WEIGH-BRIDGE-01',
+          bookingId: selectedBooking?.id,
+          rfidTag: selectedBooking?.rfidTag,
+          weightKg: weightInput,
+          measurementType: scaleMode,
+          moisturePercentage: moistureInput,
+          deviceId: 'ESP32-WEIGH-BRIDGE-01',
           source: 'LIVE_SENSOR_ADC',
         }),
       });
@@ -77,7 +77,7 @@ export function HardwareBench({ bookings, logs, onRefreshData }: HardwareBenchPr
       setResultMessage(
         `${scaleMode} weight (${weightInput} kg) recorded into procurement ledger.`
       );
-      onRefreshData();
+      onRefreshData?.();
     } catch (err: any) {
       setResultMessage(err.message || 'Weighbridge communication failed');
     } finally {
@@ -93,18 +93,18 @@ export function HardwareBench({ bookings, logs, onRefreshData }: HardwareBenchPr
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          booking_id: selectedBooking?.id,
-          rfid_tag: selectedBooking?.rfid_tag,
-          weight_kg: weightInput,
-          measurement_type: scaleMode,
-          moisture_percentage: moistureInput,
-          device_id: 'ESP32-WEIGH-BRIDGE-01',
+          bookingId: selectedBooking?.id,
+          rfidTag: selectedBooking?.rfidTag,
+          weightKg: weightInput,
+          measurementType: scaleMode,
+          moisturePercentage: moistureInput,
+          deviceId: 'ESP32-WEIGH-BRIDGE-01',
           source: 'LITTLEFS_BUFFER',
         }),
       });
       setBufferedCount(0);
       setResultMessage('All offline LittleFS queue records synchronized to central database.');
-      onRefreshData();
+      onRefreshData?.();
     } catch (err) {
       console.error(err);
     } finally {
@@ -112,12 +112,12 @@ export function HardwareBench({ bookings, logs, onRefreshData }: HardwareBenchPr
     }
   };
 
-  const weighLogs = logs.filter((l) => l.sensor_type === 'HX711_ADC' || l.sensor_type === 'LITTLEFS_BUFFER');
+  const weighLogs = logs.filter((l) => l.type === 'HX711_ADC' || l.type === 'LITTLEFS_BUFFER');
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
       <div className="lg:col-span-7 space-y-5">
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4">
+        <div className="bg-glass border-glass rounded-glassy">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
@@ -155,7 +155,7 @@ export function HardwareBench({ bookings, logs, onRefreshData }: HardwareBenchPr
               >
                 {bookings.map((b) => (
                   <option key={b.id} value={b.id}>
-                    {b.vehicle_number} — {b.farmer_name} ({b.status})
+                    {b.vehicleNumber} — {b.farmerName} ({b.status})
                   </option>
                 ))}
               </select>
@@ -175,7 +175,7 @@ export function HardwareBench({ bookings, logs, onRefreshData }: HardwareBenchPr
                   className={`py-2 text-xs font-bold rounded-lg border cursor-pointer ${
                     scaleMode === 'GROSS'
                       ? 'bg-amber-500 text-white border-amber-600 shadow-2xs'
-                      : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                      : 'bg-secondaryClay border-slate-200 text-slate-700 hover:bg-slate-100'
                   }`}
                 >
                   Gross (Laden)
@@ -189,7 +189,7 @@ export function HardwareBench({ bookings, logs, onRefreshData }: HardwareBenchPr
                   className={`py-2 text-xs font-bold rounded-lg border cursor-pointer ${
                     scaleMode === 'TARE'
                       ? 'bg-amber-500 text-white border-amber-600 shadow-2xs'
-                      : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                      : 'bg-secondaryClay border-slate-200 text-slate-700 hover:bg-slate-100'
                   }`}
                 >
                   Tare (Empty)
@@ -212,7 +212,7 @@ export function HardwareBench({ bookings, logs, onRefreshData }: HardwareBenchPr
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-secondaryClay p-4 rounded-xl border border-slate-200">
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
                 Simulate Scale Weight Value (kg)
@@ -274,7 +274,7 @@ export function HardwareBench({ bookings, logs, onRefreshData }: HardwareBenchPr
       </div>
 
       <div className="lg:col-span-5 space-y-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-3">
+        <div className="bg-glass border-glass rounded-glassy shadow-glassy space-y-3">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
             <h3 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
               <Scale className="w-4 h-4 text-amber-600" />
@@ -291,20 +291,20 @@ export function HardwareBench({ bookings, logs, onRefreshData }: HardwareBenchPr
             ) : (
               weighLogs.map((log) => (
                 <div key={log.id} className="leading-relaxed border-b border-slate-900 pb-1">
-                  <span className="text-slate-500">[{log.timestamp.split('T')[1].slice(0, 8)}]</span>{' '}
+                  <span className="text-slate-500">[{log.createdAt.toISOString().split('T')[1].slice(0, 8)}]</span>{' '}
                   <span
                     className={
-                      log.status === 'SUCCESS'
+                      log.type === 'HX711_ADC'
                         ? 'text-emerald-400 font-bold'
-                        : log.status === 'OFFLINE_BUFFERED'
+                        : log.type === 'LITTLEFS_BUFFER'
                         ? 'text-amber-400 font-bold'
                         : 'text-rose-400'
                     }
                   >
-                    [{log.sensor_type}]
+                    [{log.type}]
                   </span>{' '}
-                  <span className="text-slate-300 font-semibold">{log.action}:</span>{' '}
-                  <span className="text-slate-400">{log.raw_payload}</span>
+                  <span className="text-slate-300 font-semibold">Event:</span>{' '}
+                  <span className="text-slate-400">{JSON.stringify(log)}</span>
                 </div>
               ))
             )}

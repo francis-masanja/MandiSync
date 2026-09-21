@@ -1,22 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { MandisQuerySchema } from '@/lib/validation/telemetry';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const lat = searchParams.get('lat') ? parseFloat(searchParams.get('lat')!) : undefined;
-    const lon = searchParams.get('lon') ? parseFloat(searchParams.get('lon')!) : undefined;
+    const result = MandisQuerySchema.safeParse(Object.fromEntries(searchParams));
 
-    const mandis = db.getMandis(lat, lon);
-    const mandisWithSlots = mandis.map((m) => ({
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Invalid query parameters', details: result.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const { farmer_lat, farmer_lon, limit, offset } = result.data;
+
+    const mandis = await db.getMandisWithDistance(farmer_lat, farmer_lon);
+    const mandisWithSlots = mandis.slice(offset, offset + limit).map((m) => ({
       ...m,
       slots: db.getSlotsForMandi(m.id),
     }));
 
     return NextResponse.json({
       mandis: mandisWithSlots,
+      pagination: { limit, offset, total: mandis.length },
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {

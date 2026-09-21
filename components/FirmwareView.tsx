@@ -20,10 +20,10 @@ const ARDUINO_GATE_INO = `/*
 #define LED_GREEN 21
 #define LED_RED 22
 
-const char* ssid = "MANDI_WIFI_MESH";
-const char* password = "ApmcSecurePassword123";
+const char* ssid = "YOUR_WIFI_SSID";
+const char* password = "YOUR_WIFI_PASSWORD";
 const char* apiServer = "http://192.168.1.100:3000/api/v1/telemetry/gate-verify";
-const char* hmacSecret = "MANDISYNC_HMAC_MASTER_KEY_2026";
+const char* hmacSecret = "YOUR_HMAC_SECRET_HERE";
 
 Servo barrierServo;
 
@@ -186,8 +186,8 @@ export function FirmwareView() {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-      <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50">
+    <div className="bg-glass border-glass rounded-glassy shadow-glassy overflow-hidden">
+      <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-secondaryClay">
         <div>
           <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
             <Cpu className="w-4 h-4 text-emerald-600" />

@@ -12,9 +12,9 @@ The frontend renders a tabbed interface (`FARMER`, `GATE`, `WEIGH`, `QUEUE`, `FI
 
 Key runtime integrations:
 
-- **Google Gemini** (`@google/genai`) for AI features (future extensions).
-- **Firebase tools** for deployment and hosting (dev dependency).
 - **Lucide React** icons.
 - **Tailwind CSS 4** for styling.
+- **Motion** for animations.
+- **QRCode** for gate tokens.
 
 The project is designed to run locally with `bun` (lockfile present) or `npm`/`pnpm`. It assumes a backend service exposing the same API routes.

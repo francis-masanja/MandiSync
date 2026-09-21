@@ -6,15 +6,15 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const mandiId = searchParams.get('mandi_id');
+    const mandiId = searchParams.get('mandiId');
 
-    let bookings = db.getBookings();
+    let bookings = await db.getBookings();
     if (mandiId) {
-      bookings = bookings.filter((b) => b.mandi_id === mandiId);
+      bookings = bookings.filter((b) => b.mandiId === mandiId);
     }
 
-    const logs = db.getTelemetryLogs(40);
-    const mandis = db.getMandis();
+    const logs = await db.getTelemetryLogs(40);
+    const mandis = await db.getMandis();
 
     const totalQueued = bookings.filter((b) => b.status === 'CONFIRMED').length;
     const gateVerified = bookings.filter((b) => b.status === 'GATE_VERIFIED').length;
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     const completedToday = bookings.filter((b) => b.status === 'COMPLETED').length;
     const totalProcuredKg = bookings
       .filter((b) => b.status === 'COMPLETED')
-      .reduce((sum, b) => sum + (b.actual_net_kg || 0), 0);
+      .reduce((sum, b) => sum + (b.actualNetKg || 0), 0);
 
     return NextResponse.json({
       bookings,

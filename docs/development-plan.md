@@ -7,7 +7,7 @@
 - Commit a clean base branch.
 
 **Baby‑Version Summary:**
-> First we make sure the kitchen is clean: we throw away the expired food (vulnerable packages) and write a simple recipe book so everyone knows what’s in the pantry.
+> First we make sure the kitchen is clean: we throw away the expired food (vulnerable packages) and write a simple recipe book so everyone knows what's in the pantry.
 
 ---
 ## Phase 2️⃣ Core Feature Stabilization
@@ -18,7 +18,7 @@
 - Enforce linting and Tailwind rules.
 
 **Baby‑Version Summary:**
-> We test each toy (tab) to make sure it doesn’t break when you push it.  The robot checks the blocks fit together before we play.
+> We test each toy (tab) to make sure it doesn't break when you push it. The robot checks the blocks fit together before we play.
 
 ---
 ## Phase 3️⃣ Documentation & Onboarding
@@ -31,17 +31,7 @@
 > We draw picture books that show how to build the LEGO house – so anyone can start building right away.
 
 ---
-## Phase 4️⃣ Optional AI (Gemini) Feature
-**Goal:** Add AI only if the team wants it.
-- Keep `@google/genai` out of core deps (already removed).
-- Add an optional wrapper `lib/ai.ts` that loads the Gemini SDK behind a flag `ENABLE_GEMINI`.
-- Write unit tests with a mock AI implementation.
-
-**Baby‑Version Summary:**
-> If we later want a magic helper (Gemini), we keep it in a separate toy box and only pull it out when we actually need it.
-
----
-## Phase 5️⃣ CI/CD & Release Pipeline
+## Phase 4️⃣ CI/CD & Release Pipeline
 **Goal:** Automate build, test, and deployment.
 - Use the CI workflow already added (`.github/workflows/ci.yml`).
 - Create a release workflow that tags a version, builds the Next.js app, and optionally deploys to Vercel.
@@ -50,7 +40,7 @@
 > The robot chef automatically bakes a new cake every time we finish a step and puts it on the shelf.
 
 ---
-## Phase 6️⃣ Monitoring & Operations
+## Phase 5️⃣ Monitoring & Operations
 **Goal:** Keep the app healthy in production.
 - Add lightweight request‑logging middleware.
 - Export metrics (latency, errors, queue size) to Vercel Analytics or a simple dashboard.
@@ -60,8 +50,19 @@
 > We put a tiny watchdog that tells us when the farm is too hot or the gate is stuck.
 
 ---
+## Phase 6️⃣ Continuous Improvement
+**Goal:** Long-term project health.
+- Quarterly `npm audit` scheduled.
+- User‑feedback loop defined.
+- Design‑system docs kept up‑to‑date.
+
+**Baby‑Version Summary:**
+> Keep checking for bugs, listen to users, and update the style guide.
 
 ---
+
+---
+
 ## ✅ Audit & Usage Summary (One‑Stop Checklist)
 
 Below is a **single‑page audit sheet** you can copy into a new issue or Google Sheet. For each phase, fill in the *Covered?* column (✅ yes / ❌ no) and add any notes. After the table, the **Next‑Step Checklist** tells you exactly what to do once a phase is marked complete.
@@ -80,14 +81,12 @@ Below is a **single‑page audit sheet** you can copy into a new issue or Google
 | **3️⃣ Documentation & Onboarding** | `docs/` published to GitHub Pages/Wiki |  |  |
 |  | `CONTRIBUTING.md` created with links to docs |  |  |
 |  | Short UI demo video linked in README |  |  |
-| **4️⃣ Optional Gemini AI** | Wrapper `lib/ai.ts` with `ENABLE_GEMINI` flag added |  |  |
-|  | Mock tests for the wrapper |  |  |
-| **5️⃣ CI/CD & Release** | Release workflow (tags, build, optional Vercel deploy) added |  |  |
+| **4️⃣ CI/CD & Release** | Release workflow (tags, build, optional Vercel deploy) added |  |  |
 |  | CI passes on every PR |  |  |
-| **6️⃣ Monitoring & Ops** | Request‑logging middleware present |  |  |
+| **5️⃣ Monitoring & Ops** | Request‑logging middleware present |  |  |
 |  | Metrics exported (latency, errors, queue size) |  |  |
 |  | Ops guide with alert thresholds written |  |  |
-| **7️⃣ Continuous Improvement** | Quarterly `npm audit` scheduled |  |  |
+| **6️⃣ Continuous Improvement** | Quarterly `npm audit` scheduled |  |  |
 |  | User‑feedback loop defined |  |  |
 |  | Design‑system docs kept up‑to‑date |  |  |
 

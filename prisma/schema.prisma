@@ -1,0 +1,121 @@
+// prisma/schema.prisma
+// Turso (SQLite) schema for MandiSync
+// This file is deliberately minimal – fields required for the RBAC demo.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         String   @default("farmer")
+
+  // Relations
+  bookings     Booking[]
+  tasks        Task[]
+
+  @@map("users")
+}
+
+model Mandi {
+  id          String   @id @default(uuid())
+  name        String
+  location    String
+  latitude    Float
+  longitude   Float
+  maxDailyKg  Int
+  allocatedTodayKg Int
+  activeQueueCount Int
+  avgWaitMinutes Int
+  slots       Slot[]
+  bookings    Booking[]
+
+  @@map("mandis")
+}
+
+model Slot {
+  id        String   @id @default(uuid())
+  mandiId   String   @map("mandi_id")
+  startTime DateTime @map("start_time")
+  endTime   DateTime @map("end_time")
+  isBooked  Boolean  @default(false) @map("is_booked")
+
+  mandi      Mandi   @relation(fields: [mandiId], references: [id])
+  booking    Booking?
+
+  @@map("slots")
+}
+
+model Booking {
+  id               String   @id @default(uuid())
+  farmerId         String   @map("farmer_id")
+  farmerName       String   @map("farmer_name")
+  farmerPhone      String   @map("farmer_phone")
+  farmerVillage    String   @map("farmer_village")
+  farmerLat        Float    @map("farmer_lat")
+  farmerLon        Float    @map("farmer_lon")
+  mandiId          String   @map("mandi_id")
+  slotId           String   @unique @map("slot_id")
+  cropType         String   @map("crop_type")
+  cropVariety      String   @map("crop_variety")
+  estimatedKg      Int      @map("estimated_kg")
+  vehicleNumber    String   @map("vehicle_number")
+  rfidTag          String   @map("rfid_tag")
+  status           String   @default("PENDING")
+  createdAt        DateTime @default(now()) @map("created_at")
+  completedAt      DateTime? @map("completed_at")
+  actualGrossKg    Float?   @map("actual_gross_kg")
+  actualTareKg     Float?   @map("actual_tare_kg")
+  actualNetKg      Float?   @map("actual_net_kg")
+  gateEntryAt      DateTime? @map("gate_entry_at")
+  grossWeighedAt   DateTime? @map("gross_weighed_at")
+  tareWeighedAt    DateTime? @map("tare_weighed_at")
+  ratePerQuintal   Int?     @map("rate_per_quintal")
+  totalPayoutInr   Int?     @map("total_payout_inr")
+  hmacToken        String?  @map("hmac_token")
+
+  farmer           User     @relation(fields: [farmerId], references: [id])
+  mandi            Mandi    @relation(fields: [mandiId], references: [id])
+  slot             Slot     @relation(fields: [slotId], references: [id])
+  telemetry        Telemetry[]
+  tasks            Task[]
+
+  @@map("bookings")
+}
+
+model Telemetry {
+  id            String   @id @default(uuid())
+  bookingId     String   @map("booking_id")
+  rfidTag       String   @map("rfid_tag")
+  type          String   @default("GROSS")
+  weightKg      Float    @map("weight_kg")
+  moisturePct   Float?   @map("moisture_pct")
+  deviceId      String   @map("device_id")
+  source        String   @default("LIVE")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  booking       Booking  @relation(fields: [bookingId], references: [id])
+
+  @@map("telemetry_logs")
+}
+
+model Task {
+  id          String   @id @default(uuid())
+  description String
+  assigneeId  String   @map("assignee_id")
+  bookingId   String?  @map("booking_id")
+  dueAt       DateTime? @map("due_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  assignee    User     @relation(fields: [assigneeId], references: [id])
+  booking     Booking? @relation(fields: [bookingId], references: [id])
+
+  @@map("tasks")
+}

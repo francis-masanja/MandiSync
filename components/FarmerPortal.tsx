@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useId } from 'react';
-import { Mandi, Booking } from '@/lib/types';
+import Link from 'next/link';
 import { QrCodeCard } from './QrCodeCard';
+import type { Mandi, Booking } from '@/lib/types';
 import { calculateHaversineDistance } from '@/lib/spatial';
 import {
   MapPin,
@@ -27,10 +28,10 @@ import {
 } from 'lucide-react';
 
 interface FarmerPortalProps {
-  mandis: Mandi[];
-  activeBookings: Booking[];
-  onBookingCreated: (booking: Booking) => void;
-  onRefreshData: () => void;
+  mandis?: Mandi[];
+  activeBookings?: Booking[];
+  onBookingCreated?: (booking: Booking) => void;
+  onRefreshData?: () => void;
 }
 
 const CROP_OPTIONS = [
@@ -62,8 +63,8 @@ const ONE_HOUR_TIME_SLOTS = [
 ];
 
 export function FarmerPortal({
-  mandis,
-  activeBookings,
+  mandis = [],
+  activeBookings = [],
   onBookingCreated,
   onRefreshData,
 }: FarmerPortalProps) {
@@ -79,7 +80,7 @@ export function FarmerPortal({
   const [farmerLon, setFarmerLon] = useState(76.9321);
   const [isLocating, setIsLocating] = useState(false);
 
-  const [selectedMandiId, setSelectedMandiId] = useState(mandis[0]?.id || 'mandi-01');
+  const [selectedMandiId, setSelectedMandiId] = useState(mandis?.[0]?.id ?? 'mandi-01');
   const [selectedSlotTime, setSelectedSlotTime] = useState('08:00 AM - 09:00 AM');
   const [selectedSlotId, setSelectedSlotId] = useState('slot-08');
   const [cropType, setCropType] = useState(CROP_OPTIONS[0].name);
@@ -91,7 +92,7 @@ export function FarmerPortal({
   const [bookingSuccess, setBookingSuccess] = useState<Booking | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const selectedMandi = mandis.find((m) => m.id === selectedMandiId) || mandis[0];
+  const selectedMandi = mandis?.find((m) => m.id === selectedMandiId) ?? mandis?.[0];
   const distanceKm = selectedMandi
     ? calculateHaversineDistance(farmerLat, farmerLon, selectedMandi.latitude, selectedMandi.longitude)
     : 12.4;
@@ -160,8 +161,8 @@ export function FarmerPortal({
       }
 
       setBookingSuccess(data.booking);
-      onBookingCreated(data.booking);
-      onRefreshData();
+      onBookingCreated?.(data.booking);
+      onRefreshData?.();
       setCurrentStep(4);
     } catch (err: any) {
       setErrorMessage(err.message || 'An unexpected error occurred during slot booking.');
@@ -172,7 +173,7 @@ export function FarmerPortal({
 
   return (
     <div className="space-y-6">
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-3">
+      <div className="bg-glass border-glass rounded-glassy shadow-glass p-4 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
@@ -212,7 +213,7 @@ export function FarmerPortal({
               className={`p-2 rounded-lg text-left transition-all text-xs border cursor-pointer ${
                 currentStep === item.step
                   ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                  : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
+                  : 'bg-secondaryClay hover:bg-slate-100 border-slate-200 text-slate-700'
               }`}
             >
               <div className="font-bold truncate">{item.title}</div>
@@ -226,7 +227,7 @@ export function FarmerPortal({
 
       {/* SCREEN 1: Home / Geolocation Check */}
       {currentStep === 1 && (
-        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-5">
+        <div className="bg-glass border-glass rounded-glassy p-5 shadow-glass space-y-5">
           <div className="border-b border-slate-100 pb-3 flex items-start justify-between">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
@@ -284,7 +285,7 @@ export function FarmerPortal({
           </div>
 
           {/* Location Presets */}
-          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+          <div className="bg-secondaryClay p-4 rounded-xl border border-slate-200 space-y-3">
             <div className="text-xs font-semibold text-slate-800">
               Select or Input Farm Origin Coordinates:
             </div>
@@ -355,7 +356,7 @@ export function FarmerPortal({
 
       {/* SCREEN 2: Mandi Selection & Capacity Overview */}
       {currentStep === 2 && (
-        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-5">
+        <div className="bg-glass border-glass rounded-glassy p-5 shadow-glass space-y-5">
           <div className="border-b border-slate-100 pb-3">
             <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
               Screen 2 • Mandi Selection & Capacity Overview
@@ -372,8 +373,8 @@ export function FarmerPortal({
             {mandis.map((m) => {
               const dist = calculateHaversineDistance(farmerLat, farmerLon, m.latitude, m.longitude);
               const isSelected = selectedMandiId === m.id;
-              const remainingQuotaKg = Math.max(0, m.max_daily_kg - m.allocated_today_kg);
-              const percentUsed = Math.min(100, Math.round((m.allocated_today_kg / m.max_daily_kg) * 100));
+              const remainingQuotaKg = Math.max(0, m.maxDailyKg - m.allocatedTodayKg);
+              const percentUsed = Math.min(100, Math.round((m.allocatedTodayKg / m.maxDailyKg) * 100));
 
               return (
                 <div
@@ -388,7 +389,6 @@ export function FarmerPortal({
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="text-xs font-bold text-slate-900">{m.name}</div>
-                      <div className="text-[11px] text-slate-500 mt-0.5">Code: {m.code}</div>
                     </div>
                     <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full font-mono">
                       {dist} km
@@ -399,7 +399,7 @@ export function FarmerPortal({
                     <div className="flex justify-between text-[11px]">
                       <span className="text-slate-500 font-medium">Remaining Daily Quota:</span>
                       <span className="font-bold text-slate-900 font-mono">
-                        {remainingQuotaKg.toLocaleString()} / {m.max_daily_kg.toLocaleString()} kg
+                        {remainingQuotaKg.toLocaleString()} / {m.maxDailyKg.toLocaleString()} kg
                       </span>
                     </div>
                     <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
@@ -413,15 +413,15 @@ export function FarmerPortal({
                   </div>
 
                   <div className="mt-3 flex items-center justify-between text-[11px] text-slate-600 pt-2 border-t border-slate-100">
-                    <span>Queue: {m.active_queue_count} trucks</span>
-                    <span>Avg Turnaround: ~{m.avg_wait_minutes} min</span>
+                    <span>Queue: {m.activeQueueCount} trucks</span>
+                    <span>Avg Turnaround: ~{m.avgWaitMinutes} min</span>
                   </div>
                 </div>
               );
             })}
           </div>
 
-          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+          <div className="bg-secondaryClay p-4 rounded-xl border border-slate-200 space-y-3">
             <div className="text-xs font-semibold text-slate-800">
               Select Crop to Deliver:
             </div>
@@ -521,7 +521,7 @@ export function FarmerPortal({
             })}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-secondaryClay p-4 rounded-xl border border-slate-200">
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
                 Estimated Harvest Weight: <span className="font-bold text-emerald-700 font-mono">{estimatedKg.toLocaleString()} kg</span>
@@ -617,7 +617,7 @@ export function FarmerPortal({
 
       {/* SCREEN 4: Digital Pass Issued */}
       {currentStep === 4 && (
-        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-5">
+        <div className="bg-glass border-glass rounded-glassy p-5 shadow-glass space-y-5">
           <div className="border-b border-slate-100 pb-3 flex items-start justify-between">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
@@ -631,14 +631,13 @@ export function FarmerPortal({
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => window.print()}
-              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <Printer className="w-3.5 h-3.5" />
-              Print Pass
-            </button>
+<Link
+                href={`/pass/print?bookingId=${bookingSuccess?.id || activeBookings[0]?.id || 'BK-2026-001'}&rfid=${bookingSuccess?.rfidTag || rfidTag}&slot=${encodeURIComponent(selectedSlotTime)}&mandi=${encodeURIComponent(selectedMandi?.name || '')}`}
+                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                Print Digital Pass
+              </Link>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-5 items-center">
@@ -646,7 +645,7 @@ export function FarmerPortal({
               <QrCodeCard
                 data={JSON.stringify({
                   booking_id: bookingSuccess?.id || activeBookings[0]?.id || 'BK-2026-001',
-                  hmac: bookingSuccess?.hmac_token || activeBookings[0]?.hmac_token || '9e7b29a6e1f0e4b7c8a1132049e7b29a',
+                  hmac: bookingSuccess?.hmacToken || activeBookings[0]?.hmacToken || '9e7b29a6e1f0e4b7c8a1132049e7b29a',
                   rfid: rfidTag,
                   slot: selectedSlotTime,
                 })}
@@ -655,7 +654,7 @@ export function FarmerPortal({
               />
             </div>
 
-            <div className="sm:col-span-7 bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2.5 text-xs">
+            <div className="sm:col-span-7 bg-secondaryClay p-4 rounded-xl border border-slate-200 space-y-2.5 text-xs">
               <div className="flex justify-between items-center pb-2 border-b border-slate-200">
                 <span className="text-slate-500 font-medium">Digital Pass ID:</span>
                 <span className="font-mono font-bold text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200">
@@ -666,14 +665,14 @@ export function FarmerPortal({
               <div className="flex justify-between py-1 border-b border-slate-100">
                 <span className="text-slate-500">Vehicle UHF RFID Tag:</span>
                 <span className="font-mono font-bold text-emerald-700 bg-white px-1.5 py-0.5 rounded border border-emerald-200">
-                  {bookingSuccess?.rfid_tag || rfidTag}
+                  {bookingSuccess?.rfidTag || rfidTag}
                 </span>
               </div>
 
-              <div className="flex justify-between py-1 border-b border-slate-100">
-                <span className="text-slate-500">Scheduled Arrival Window:</span>
-                <span className="font-bold text-slate-800">{bookingSuccess?.slot_window || selectedSlotTime}</span>
-              </div>
+<div className="flex justify-between py-1 border-b border-slate-100">
+              <span className="text-slate-500">Scheduled Arrival Window:</span>
+              <span className="font-bold text-slate-800">{bookingSuccess?.slot?.windowStart && bookingSuccess.slot.windowEnd ? `${bookingSuccess.slot.windowStart} - ${bookingSuccess.slot.windowEnd}` : selectedSlotTime}</span>
+            </div>
 
               <div className="flex justify-between py-1 border-b border-slate-100">
                 <span className="text-slate-500">Guaranteed Queue Turnaround:</span>
@@ -719,7 +718,7 @@ export function FarmerPortal({
 
       {/* SCREEN 5: Digital Procurement Pass & Receipt */}
       {currentStep === 5 && (
-        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-5">
+        <div className="bg-glass border-glass rounded-glassy p-5 shadow-glass space-y-5">
           <div className="border-b border-slate-100 pb-3 flex items-start justify-between">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
@@ -763,19 +762,19 @@ export function FarmerPortal({
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-              <div className="p-2.5 bg-slate-50 rounded-lg">
+              <div className="p-2.5 bg-secondaryClay rounded-lg">
                 <span className="text-slate-400 block text-[10px]">Farmer Name:</span>
                 <strong className="text-slate-900">{farmerName}</strong>
               </div>
-              <div className="p-2.5 bg-slate-50 rounded-lg">
+              <div className="p-2.5 bg-secondaryClay rounded-lg">
                 <span className="text-slate-400 block text-[10px]">Vehicle Registration:</span>
                 <strong className="font-mono text-slate-900">{vehicleNumber}</strong>
               </div>
-              <div className="p-2.5 bg-slate-50 rounded-lg">
+              <div className="p-2.5 bg-secondaryClay rounded-lg">
                 <span className="text-slate-400 block text-[10px]">Crop / Variety:</span>
                 <strong className="text-slate-900">{cropType}</strong>
               </div>
-              <div className="p-2.5 bg-slate-50 rounded-lg">
+              <div className="p-2.5 bg-secondaryClay rounded-lg">
                 <span className="text-slate-400 block text-[10px]">RFID Transponder:</span>
                 <strong className="font-mono text-emerald-700">{rfidTag}</strong>
               </div>
