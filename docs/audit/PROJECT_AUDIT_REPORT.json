@@ -1,0 +1,522 @@
+{
+  "meta": {
+    "project": "MandiSync",
+    "path": "/home/blue/Documents/School/Projects/MandiSync",
+    "auditDate": "2026-10-29",
+    "auditor": "opencode (strict project-flow audit) + independent second opinion: ollama gpt-oss:120b-cloud",
+    "scope": [
+      "Client-usage readiness (can this be demoed / handed to a client as-is?)",
+      "System readiness (can this run as a real production system?)",
+      "What is DONE vs NOT DONE (demo-stage aware grading)"
+    ],
+    "frameworkCorrection": "The project was described as Nuxt, but the codebase is Next.js 16 (App Router) + React 19 + TypeScript 5.9 + Tailwind CSS 4.",
+    "evidenceBasis": [
+      "Full source walk of app/, components/, lib/, hooks/, prisma/",
+      "npm run lint -> PASS (exit 0)",
+      "npm run type-check -> PASS (exit 0)",
+      "npm run build -> PASS (Next.js 16.3.5, 19 static + dynamic routes)",
+      "CI workflow vs package.json scripts cross-check",
+      "Ollama independent grading pass"
+    ]
+  },
+  "grades": {
+    "overall_0_100": 48,
+    "client_usage_readiness_0_100": 55,
+    "system_production_readiness_0_100": 35,
+    "demo_presentation_value_0_100": 62,
+    "code_quality_0_100": 62,
+    "security_0_100": 38,
+    "testing_0_100": 5,
+    "data_layer_0_100": 45,
+    "documentation_0_100": 70,
+    "hardware_integration_0_100": 40,
+    "gradeRationale": {
+      "overall": "Solid UI demo skeleton with a working build, but zero tests, demo-only auth, broken CI script, debug routes shipped, and most planned production features unfinished. Fair grade for a mid-stage student demo, not for delivery.",
+      "client_usage": "Can be shown as an interactive prototype after login with demo credentials, but the landing page forces login, the /demo link is broken, and forgot-password / offline / PDF features are stubs — a strict client review will notice.",
+      "system": "Cannot be operated as a real mandi system: no device auth for ESP32, in-memory DB fallback is the effective default, rate limiting is per-process, reset endpoint lacks handler-level auth, debug/test APIs are public."
+    }
+  },
+  "secondOpinion_ollama": {
+    "model": "gpt-oss:120b-cloud",
+    "overall_grade_0_100": 42,
+    "client_readiness_grade_0_100": 28,
+    "system_readiness_grade_0_100": 55,
+    "note": "Ollama was stricter on client readiness (auth friction) and slightly more generous on system readiness. Primary auditor scores sit between the two views; final grades above are the reconciled strict assessment."
+  },
+  "whatIsDone": {
+    "summary": "Core multi-tab demo UI, 7 REST v1 endpoints, dual-mode data layer (in-memory + Prisma/libsql), NextAuth credentials skeleton, Zod validation on telemetry, security headers, rate-limit helpers, Web Serial + firmware viewer, docs/plans, CI file (incomplete).",
+    "features": [
+      {
+        "id": "ui-core",
+        "name": "Multi-section demo UI (Farmer, Gate, Weigh, Queue, Firmware)",
+        "status": "DONE_DEMO",
+        "quality": "good",
+        "evidence": "components/FarmerPortal.tsx (843 LOC wizard), GateControlDesk, HardwareBench, QueueLedger, FirmwareView; pages under app/(dashboard)/",
+        "notes": "Prefilled demo data, 5-step booking wizard, lifecycle statuses, QR card component."
+      },
+      {
+        "id": "api-v1",
+        "name": "REST API v1 (7 endpoints)",
+        "status": "DONE_DEMO",
+        "quality": "partial",
+        "evidence": "app/api/v1/{mandis,queue/status,bookings/create,telemetry/*,reset}",
+        "notes": "Zod on telemetry; bookings/create has manual field checks; queue has no in-handler auth; reset relies only on middleware."
+      },
+      {
+        "id": "auth-skeleton",
+        "name": "Email/password login (NextAuth credentials + bcrypt)",
+        "status": "DONE_DEMO",
+        "quality": "weak",
+        "evidence": "app/api/auth/[...nextauth]/route.ts, app/(auth)/login/page.tsx, data/users.json (3 demo users)",
+        "notes": "Users are a JSON file, not DB. No SessionProvider in root layout. useCurrentUser defined but unused."
+      },
+      {
+        "id": "rbac-matrix",
+        "name": "Role/permission matrix",
+        "status": "DONE_PARTIAL",
+        "quality": "partial",
+        "evidence": "lib/roles.ts Permissions map; middleware pathRoleMap",
+        "notes": "Matrix exists; coverage incomplete (gate/weigh/queue/firmware not role-gated)."
+      },
+      {
+        "id": "validation",
+        "name": "Zod payload validation (telemetry + mandis query)",
+        "status": "DONE",
+        "quality": "good",
+        "evidence": "lib/validation/telemetry.ts",
+        "notes": "zod is only a transitive dependency — not declared in package.json."
+      },
+      {
+        "id": "security-headers",
+        "name": "Security headers + CSP in middleware",
+        "status": "DONE_PARTIAL",
+        "quality": "weak",
+        "evidence": "app/middleware.ts CSP_HEADERS",
+        "notes": "unsafe-inline + unsafe-eval present; Permissions-Policy blocks camera/geolocation (may break future QR/GPS features)."
+      },
+      {
+        "id": "rate-limit",
+        "name": "In-memory rate limiting",
+        "status": "DONE_DEMO",
+        "quality": "weak",
+        "evidence": "lib/rate-limit.ts; auth limiter in nextauth route",
+        "notes": "Per-process Map — resets on restart, ineffective multi-instance/serverless."
+      },
+      {
+        "id": "hmac",
+        "name": "HMAC-SHA256 gate token helpers",
+        "status": "DONE",
+        "quality": "good",
+        "evidence": "lib/crypto.ts; prebuild secret-scan script",
+        "notes": "Env-based secret; timingSafeEqual with fallback."
+      },
+      {
+        "id": "spatial",
+        "name": "Haversine distance + mandi ranking",
+        "status": "DONE",
+        "quality": "good",
+        "evidence": "lib/spatial.ts used in db + FarmerPortal"
+      },
+      {
+        "id": "hardware-bench",
+        "name": "Virtual hardware bench + Web Serial helper + firmware viewer",
+        "status": "DONE_DEMO",
+        "quality": "good",
+        "evidence": "lib/web-serial.ts, lib/firmware.ts, components/HardwareBench.tsx, FirmwareView.tsx",
+        "notes": "Firmware uses YOUR_WIFI_SSID placeholders (good). Real device path to API still blocked by session auth."
+      },
+      {
+        "id": "ai-advisor",
+        "name": "Ollama AI advisor client",
+        "status": "DONE_PARTIAL",
+        "quality": "weak",
+        "evidence": "lib/ai.ts callOllama / generateBookingAdvice / summarizeQueueStatus",
+        "notes": "Library only; not wired into UI pages. Default model 'gemma4:31b' looks incorrect."
+      },
+      {
+        "id": "build-quality",
+        "name": "Lint, type-check, production build",
+        "status": "DONE",
+        "quality": "good",
+        "evidence": "All three commands exit 0 locally; Next 16.3.5 build succeeds (19 pages/routes)."
+      },
+      {
+        "id": "docs",
+        "name": "Architecture + phased plan documentation",
+        "status": "DONE",
+        "quality": "good",
+        "evidence": "docs/*, docs/plans/MASTER_PLAN.md + PHASE_1..6",
+        "notes": "Honest in MASTER_PLAN that tests/auth are incomplete; TODO_CHECKLIST phase headers show ✅ while every checkbox is still [ ] — misleading."
+      },
+      {
+        "id": "prisma-schema",
+        "name": "Prisma schema + migrations (User/Mandi/Slot/Booking/Telemetry/Task)",
+        "status": "DONE_PARTIAL",
+        "quality": "partial",
+        "evidence": "prisma/schema.prisma, 3 migrations, prisma/dev.db",
+        "notes": "Schema exists; runtime path not proven in .env (no DATABASE_URL key); Booking.farmerId is required FK — seed users only live in users.json."
+      }
+    ]
+  },
+  "whatIsNotDone": {
+    "summary": "Everything in Phase 1 (tests), most of Phase 2 production hardening, nearly all of Phase 3 dedicated farmer/official routes, Phase 4 device API keys, Phase 5 monitoring, Phase 6 release assets. Multiple planned features are UI labels only.",
+    "features": [
+      {
+        "id": "tests",
+        "name": "Unit / integration / E2E tests",
+        "status": "NOT_DONE",
+        "severity": "critical",
+        "evidence": "No *.test.* / *.spec.* files; no tests/ e2e/ dirs; package.json has no \"test\" script",
+        "impact": "CI step 'npm test' will fail; no regression safety net."
+      },
+      {
+        "id": "ci-working",
+        "name": "Working CI pipeline",
+        "status": "NOT_DONE",
+        "severity": "critical",
+        "evidence": ".github/workflows/ci.yml runs npm test; npm audit step is soft-fail",
+        "impact": "Pipeline is red on main; security audit never blocks."
+      },
+      {
+        "id": "db-real",
+        "name": "Production database wiring (Turso/SQLite actually used)",
+        "status": "NOT_DONE",
+        "severity": "critical",
+        "evidence": ".env has TURSO_DATABASE_URL/TURSO_AUTH_TOKEN; lib/db.ts and lib/prisma.ts read DATABASE_URL only → usePrisma=false → in-memory mode",
+        "impact": "All bookings/telemetry vanish on restart; Prisma path untested and partially broken."
+      },
+      {
+        "id": "db-bugs",
+        "name": "Correctness of Prisma code path",
+        "status": "NOT_DONE",
+        "severity": "high",
+        "evidence": "bookings/create does not await db.createBooking(); mandis route embeds db.getSlotsForMandi() without await; prisma resetDemoData is no-op",
+        "impact": "If DATABASE_URL is ever set, booking create returns a Promise in JSON and slots become Promises."
+      },
+      {
+        "id": "session-provider",
+        "name": "SessionProvider + real client session usage",
+        "status": "NOT_DONE",
+        "severity": "high",
+        "evidence": "No SessionProvider in app/layout.tsx; hooks/useCurrentUser.ts unused by any page/component",
+        "impact": "Client components cannot reliably read session; login redirect uses a manual /api/auth/session fetch."
+      },
+      {
+        "id": "device-auth",
+        "name": "Device/API-key auth for ESP32 telemetry",
+        "status": "NOT_DONE",
+        "severity": "critical",
+        "evidence": "Middleware redirects unauthenticated requests (incl. /api/v1/telemetry/*) to HTML /login; firmware posts without cookie session",
+        "impact": "Real hardware cannot call gate-verify / weighbridge / batch-sync."
+      },
+      {
+        "id": "reset-auth",
+        "name": "In-handler auth on /api/v1/reset",
+        "status": "NOT_DONE",
+        "severity": "high",
+        "evidence": "route.ts POST has no getToken/role check; only middleware prefix map",
+        "impact": "Defense-in-depth failure; any middleware regression exposes data wipe."
+      },
+      {
+        "id": "debug-routes",
+        "name": "Removal/protection of debug & test APIs",
+        "status": "NOT_DONE",
+        "severity": "critical",
+        "evidence": "app/api/debug/env, test-db, test-db-direct, test-db-tables, test-prisma, test-prisma-direct, test-prisma-fixed all present in production build output",
+        "impact": "Leaky info (DB URL length, prefixes) + unnecessary attack surface."
+      },
+      {
+        "id": "route-demo",
+        "name": "Working /demo route",
+        "status": "NOT_DONE",
+        "severity": "high",
+        "evidence": "app/(demo)/page.tsx maps to / (conflicts with app/page.tsx); landing page links to /demo which has no route",
+        "impact": "Demo Flow button 404s; duplicate / resolution is ambiguous."
+      },
+      {
+        "id": "public-landing",
+        "name": "Public unauthenticated landing page",
+        "status": "NOT_DONE",
+        "severity": "high",
+        "evidence": "middleware matcher '/:path*' redirects to /login when no token, including /",
+        "impact": "Client cannot even see the product home without credentials."
+      },
+      {
+        "id": "forgot-password",
+        "name": "Password reset flow",
+        "status": "NOT_DONE",
+        "severity": "medium",
+        "evidence": "app/(auth)/forgot-password/page.tsx — client-side setState only, no API, no email",
+        "impact": "Dead-end UX; compliance risk if presented as real."
+      },
+      {
+        "id": "otp-phone",
+        "name": "Phone OTP authentication (planned)",
+        "status": "NOT_DONE",
+        "severity": "medium",
+        "impact": "Planned in Phase 2/3; no provider integrated."
+      },
+      {
+        "id": "offline-idb",
+        "name": "IndexedDB offline pass cache / offline sync",
+        "status": "NOT_DONE",
+        "severity": "medium",
+        "evidence": "UI strings in FarmerPortal/InteractiveDemoModal mention IndexedDB; no IndexedDB code in lib/",
+        "impact": "Marketing claim in UI without implementation."
+      },
+      {
+        "id": "pdf-receipt",
+        "name": "PDF receipt download",
+        "status": "NOT_DONE",
+        "severity": "medium",
+        "impact": "Listed in Phase 3; no PDF library or route."
+      },
+      {
+        "id": "official-flows",
+        "name": "Dedicated /official/* and /farmer/* sub-flows (select-mandi, book-slot, pass-issued, live-queue, receipt, scan-pass, scale-monitor)",
+        "status": "NOT_DONE",
+        "severity": "high",
+        "evidence": "Only single pages /farmer /gate /weigh /queue /firmware exist; no /dashboard or /admin pages despite middleware expecting them",
+        "impact": "Login redirects operator→/dashboard and admin→/admin which do not exist (404)."
+      },
+      {
+        "id": "react-query",
+        "name": "React Query / data-fetching layer",
+        "status": "NOT_DONE",
+        "severity": "medium",
+        "impact": "Pages are server components reading db once; no client refetch/polling wiring for live queue."
+      },
+      {
+        "id": "health-logging",
+        "name": "/api/health, Pino structured logging, global-error.tsx",
+        "status": "NOT_DONE",
+        "severity": "medium",
+        "evidence": "No app/api/health, no app/global-error.tsx / error.tsx; prisma.ts uses console.error",
+        "impact": "No ops readiness or graceful error boundaries."
+      },
+      {
+        "id": "monitoring-release",
+        "name": "Uptime monitor, runbook, CHANGELOG, release workflow, demo video",
+        "status": "NOT_DONE",
+        "severity": "low",
+        "impact": "Phase 5/6 items absent."
+      },
+      {
+        "id": "rate-limit-prod",
+        "name": "Distributed rate limiting (Redis/Upstash)",
+        "status": "NOT_DONE",
+        "severity": "medium",
+        "impact": "Not safe behind multiple serverless instances."
+      },
+      {
+        "id": "ai-wired",
+        "name": "AI advisor surfaced in UI",
+        "status": "NOT_DONE",
+        "severity": "low",
+        "impact": "lib/ai.ts unused by any route/component."
+      }
+    ]
+  },
+  "criticalIssues": [
+    {
+      "id": "CI-01",
+      "title": "CI runs npm test but no test script exists",
+      "severity": "critical",
+      "evidence": ".github/workflows/ci.yml:34 vs package.json scripts",
+      "recommendation": "Add vitest + a minimal test suite, or remove the CI step until tests exist."
+    },
+    {
+      "id": "SEC-01",
+      "title": "Debug/test API routes deployed in production build",
+      "severity": "critical",
+      "evidence": "Build route list includes /api/debug/env and 6 /api/test-* routes",
+      "recommendation": "Delete or gate behind NODE_ENV!=='production' + admin auth."
+    },
+    {
+      "id": "HW-01",
+      "title": "ESP32 cannot authenticate — middleware redirects API calls to HTML login",
+      "severity": "critical",
+      "evidence": "middleware matcher ':path*' + no device API keys; firmware template posts to gate-verify",
+      "recommendation": "Exempt device endpoints with HMAC/device-key auth; never redirect API to HTML."
+    },
+    {
+      "id": "DATA-01",
+      "title": "TURSO_* env vars set but code reads DATABASE_URL — silently in-memory",
+      "severity": "critical",
+      "evidence": "lib/db.ts:406 usePrisma = !!process.env.DATABASE_URL; .env keys are TURSO_*",
+      "recommendation": "Unify env contract; wire Prisma adapter with TURSO_AUTH_TOKEN; add smoke test for DB mode."
+    },
+    {
+      "id": "AUTH-01",
+      "title": "Auth is file-based demo; SessionProvider missing; operator/admin land on missing routes",
+      "severity": "critical",
+      "evidence": "data/users.json; no SessionProvider; login redirects to /dashboard and /admin which don't exist",
+      "recommendation": "Move users to DB, add SessionProvider, create /dashboard and /admin or redirect to existing pages."
+    },
+    {
+      "id": "ROUTE-01",
+      "title": "Landing page requires login; /demo link broken; / route double-defined",
+      "severity": "high",
+      "evidence": "middleware forces login on /; app/(demo)/page.tsx vs app/page.tsx; href='/demo'",
+      "recommendation": "Public / and /demo; rename route group to app/demo/page.tsx; allowlist public paths in middleware."
+    },
+    {
+      "id": "SEC-02",
+      "title": "/api/v1/reset has no handler-level authorization",
+      "severity": "high",
+      "evidence": "app/api/v1/reset/route.ts POST",
+      "recommendation": "Require admin token inside the handler (defense in depth)."
+    },
+    {
+      "id": "DB-02",
+      "title": "Prisma path bugs: unawaited createBooking, unawaited getSlotsForMandi, no-op reset",
+      "severity": "high",
+      "evidence": "app/api/v1/bookings/create/route.ts:68; app/api/v1/mandis/route.ts; lib/db.ts prismaDb.resetDemoData",
+      "recommendation": "Await all db calls; implement real reset or remove endpoint."
+    },
+    {
+      "id": "DEP-01",
+      "title": "zod imported but not a direct dependency",
+      "severity": "high",
+      "evidence": "lib/validation/telemetry.ts imports zod; package.json has no zod entry (only transitive via @hookform/resolvers)",
+      "recommendation": "Add \"zod\" to dependencies and pin version."
+    },
+    {
+      "id": "SEC-03",
+      "title": "CSP allows unsafe-inline and unsafe-eval",
+      "severity": "medium",
+      "evidence": "app/middleware.ts script-src",
+      "recommendation": "Nonce-based CSP for production; drop unsafe-eval."
+    }
+  ],
+  "clientUsageVerdict": {
+    "canDemoToday": "YES — with caveats",
+    "demoCredentials": [
+      "farmer@example.com",
+      "operator@example.com",
+      "admin@example.com"
+    ],
+    "demoFriction": [
+      "Must log in before seeing any page, including home",
+      "Demo Flow button on home is a dead link (/demo)",
+      "operator/admin post-login redirects hit non-existent /dashboard and /admin",
+      "UI claims (IndexedDB offline, live hardware) exceed what is implemented"
+    ],
+    "safeToClaim": [
+      "Interactive prototype of farmer booking → gate verify → weighbridge → queue ledger",
+      "Design system and multi-role UI exploration",
+      "REST API sketch for integration partners"
+    ],
+    "unsafeToClaim": [
+      "Production-ready system",
+      "Real hardware connectivity to cloud",
+      "Offline-first mobile experience",
+      "Password reset / OTP onboarding",
+      "Audited security posture"
+    ]
+  },
+  "systemVerdict": {
+    "productionReady": false,
+    "blockers": [
+      "Zero automated tests + broken CI",
+      "No durable DB in effective runtime path",
+      "No device authentication path for IoT",
+      "Debug/test endpoints exposed",
+      "No health checks, logging, error boundaries, monitoring",
+      "Auth store is a committed JSON file of demo users"
+    ]
+  },
+  "recommendations": [
+    {
+      "priority": 1,
+      "action": "Fix demo flow for client walkthrough: public landing, working /demo route, redirect operators to /gate or /queue and admins to /queue until real dashboards exist.",
+      "effort": "S",
+      "impact": "Immediate client-demo credibility"
+    },
+    {
+      "priority": 2,
+      "action": "Delete or production-gate all /api/debug/* and /api/test-* routes; remove from build.",
+      "effort": "S",
+      "impact": "Closes obvious attack surface"
+    },
+    {
+      "priority": 3,
+      "action": "Declare zod in package.json; align DATABASE_URL vs TURSO_* env contract; await Prisma calls; implement or remove reset.",
+      "effort": "S",
+      "impact": "Prevents silent data-mode and API breakage"
+    },
+    {
+      "priority": 4,
+      "action": "Add Vitest unit tests for lib/spatial, lib/crypto, lib/validation, and API routes; replace CI npm test step with real runner; enforce lint/type/test/build gates.",
+      "effort": "M",
+      "impact": "Restores CI trust and regression safety"
+    },
+    {
+      "priority": 5,
+      "action": "Introduce device API-key or HMAC auth for telemetry endpoints; stop middleware redirecting API traffic to HTML.",
+      "effort": "M",
+      "impact": "Unlocks real ESP32 integration path"
+    },
+    {
+      "priority": 6,
+      "action": "Add SessionProvider, move users into Prisma User table, add /api/health, global-error.tsx, structured logs.",
+      "effort": "M",
+      "impact": "Baseline production hardening"
+    },
+    {
+      "priority": 7,
+      "action": "Either implement IndexedDB offline passes + PDF receipts or remove those claims from the UI before client review.",
+      "effort": "M",
+      "impact": "Avoids demo honesty gap"
+    },
+    {
+      "priority": 8,
+      "action": "Implement distributed rate limiting, tighter CSP, and remove soft-fail on npm audit in CI.",
+      "effort": "M",
+      "impact": "Security posture for any hosted demo"
+    },
+    {
+      "priority": 9,
+      "action": "Reconcile docs: fix TODO_CHECKLIST phase checkmarks that falsely show phases complete; keep MASTER_PLAN status table as source of truth.",
+      "effort": "S",
+      "impact": "Stakeholder trust"
+    },
+    {
+      "priority": 10,
+      "action": "Only after P1–P6: build official dashboards, OTP auth, live queue polling, AI advisor UI, hardware flash guide.",
+      "effort": "L",
+      "impact": "Completes product vision"
+    }
+  ],
+  "scorecard": [
+    { "dimension": "UI / UX demo quality", "score_0_100": 68, "grade": "C+", "done": "5-section dashboard, booking wizard, queue table", "gap": "Auth wall on landing; broken /demo; missing dashboards" },
+    { "dimension": "API surface", "score_0_100": 58, "grade": "C", "done": "7 v1 endpoints, Zod on telemetry", "gap": "No device auth; reset unauthenticated in-handler; queue open to any logged-in role via middleware only" },
+    { "dimension": "Auth & RBAC", "score_0_100": 40, "degree": "D", "done": "NextAuth credentials, roles enum, permission map", "gap": "JSON users, no SessionProvider, incomplete path map, dead redirect targets" },
+    { "dimension": "Data layer", "score_0_100": 45, "grade": "D+", "done": "In-memory demo DB + Prisma schema/migrations", "gap": "Env mismatch keeps app in-memory; Prisma path bugs; no-op reset" },
+    { "dimension": "Testing & CI", "score_0_100": 8, "grade": "F", "done": "CI YAML skeleton; lint+type in pipeline", "gap": "Zero tests; npm test missing; audit soft-fails" },
+    { "dimension": "Security", "score_0_100": 38, "grade": "D", "done": "bcrypt, HMAC helper, security headers, rate limit helpers, prebuild secret scan", "gap": "Debug routes, CSP unsafe-*, file users, no device keys, reset hole" },
+    { "dimension": "Hardware / IoT path", "score_0_100": 40, "grade": "D+", "done": "Web Serial, firmware viewer, virtual bench, LittleFS batch-sync API shape", "gap": "Cannot authenticate real devices; no flash guide; no /admin/devices" },
+    { "dimension": "Docs & planning", "score_0_100": 70, "grade": "B-", "done": "MASTER_PLAN, phase docs, architecture docs", "gap": "Checklist marks phases ✅ with all boxes unchecked; some docs stale vs code" }
+  ],
+  "phaseStatus": [
+    { "phase": "1 – Test infrastructure", "planned": true, "actual": "NOT_STARTED", "note": "No Vitest/Playwright; CI test step will fail" },
+    { "phase": "2 – Production hardening", "planned": true, "actual": "PARTIAL", "note": "Auth skeleton + rate limit + Zod exist; DB choice/env, logging, health, OTP, global-error missing" },
+    { "phase": "3 – Farmer & official flows", "planned": true, "actual": "PARTIAL_UI_ONLY", "note": "Single-page portals exist; dedicated routes, React Query, IndexedDB, PDF, official dashboards missing" },
+    { "phase": "4 – Hardware integration", "planned": true, "actual": "PARTIAL", "note": "Serial + firmware view exist; device registration/API keys/flash guide missing" },
+    { "phase": "5 – Monitoring & ops", "planned": true, "actual": "NOT_STARTED", "note": "No Pino, runbook, uptime workflow" },
+    { "phase": "6 – Docs & release", "planned": true, "actual": "PARTIAL", "note": "Good internal docs; no CONTRIBUTING, CHANGELOG, release workflow, demo video" }
+  ],
+  "finalVerdict": {
+    "oneLiner": "A visually strong mid-fidelity demo of a mandi queue + IoT weighbridge system that builds clean, but is not yet a testable, durable, or hardware-connectable system — and needs small demo-trust fixes before a strict client walkthrough.",
+    "readyFor": [
+      "Internal demo / viva presentation with pre-shared credentials",
+      "UI/UX and API contract discussion",
+      "Continuation as a student project base"
+    ],
+    "notReadyFor": [
+      "Client acceptance as a production system",
+      "Live pilot at a real mandi with ESP32 devices",
+      "Any deployment with public internet exposure without removing debug routes and fixing auth"
+    ]
+  }
+}

@@ -1,0 +1,297 @@
+{
+  "SECTIONS": {
+    "intro": [
+      "MandiSync is a web‑based platform built for agricultural mandis—the regulated markets where farmers bring their produce to be weighed and sold. It combines slot booking, gate entry, weighbridge recording and queue tracking all in one place. With the app, farmers can spot nearby mandis, see how much capacity is still available and reserve an arrival window instead of driving out and joining an unknown line. On the staff side, there’s a gate desk that scans an RFID tag or QR pass, a weighbridge screen that logs both gross and tare weights, and a live ledger that shows how many vehicles are waiting and how many have finished.",
+      "We put together a Next.js web app, a Prisma/SQLite database, and an ESP32 hardware folder that holds the gate and scale node code. The web app serves as the primary interface. The code that runs on the devices lives outside the website and communicates with the server via API endpoints. Right now it’s a functional prototype: the key screens and API routes are working, and the next steps are to strengthen the data layer, add device authentication, and write automated tests."
+    ],
+    "problem": [
+      "Most mandis still handle arrivals with physical queues, paper slips and phone calls. A farmer might travel a long distance without any idea if the mandi has space or how long the line will be. Gate staff manually check entries, and weighbridge readings get copied into registers, so the same booking can end up in several places. The result is long queues, unnecessary trips, typing errors and weak records when it comes time to settle. On top of that, nobody has a shared live view—farmers, gate operators and mandi managers each rely on their own separate information.",
+      "MandiSync solves the problem by giving the three roles a single source of truth for bookings, gate status and weights. Instead of manually copying data, device readings are pulled through a controlled API, and the queue ledger is generated from those same booking records. This creates a cleaner flow from booking to gate to weighing, cuts down on duplicate entry, and shows the status clearly at every step."
+    ],
+    "objectives": [
+      "The project delivers a simple farmer portal where users can check nearby mandis and book an arrival slot.",
+      "We verify gate entry with an RFID tag or a QR pass, then update the booking status.",
+      "The ESP32 pulls the gross and tare readings from the HX711 scale, and then we compute the net weight from those values.",
+      "We display a live queue ledger that tracks vehicles in each stage—waiting, gate‑verified, weighing, and completed.",
+      "We put together a modular foundation and then harden it for real deployment by plugging in a durable database, device authentication and a set of automated tests."
+    ],
+    "scope": [
+      "Our prototype includes the farmer booking wizard, the mandi list showing distance and quota info, gate verification, weighbridge entry, the queue ledger, a REST API, the Prisma data model, and a hardware protocol with gate and scale sketches. The goal is to demonstrate the full end‑to‑end flow and give the team a solid foundation for the next phase.",
+      "We still haven’t added real payment settlement, government or e-NAM integration, SMS or OTP onboarding, production device provisioning, offline IndexedDB passes, PDF receipts or a complete automated test suite. Those items are listed in the future‑work section instead of being presented as finished features."
+    ],
+    "tech_justification": [
+      "Next.js was our pick because it lets the UI and the API live together in a single TypeScript project. With the App Router we got server components for the initial data load and route handlers for the REST endpoints, which meant we didn’t have to spin up a separate backend for this short project. Using React and Tailwind let us build the multi‑role screens fast, and TypeScript flagged a few shape mistakes before runtime.",
+      "We chose Prisma because its schema is easy to read and the migrations are simple to review. SQLite keeps local development straightforward, and the libSQL adapter gives the project a path to Turso when it’s hosted. For the basic security and validation needs we rely on NextAuth, bcrypt and Zod, so no extra infrastructure is required. The trade‑off is the current in‑memory fallback—it was handy for the demo but has to be removed before production since data disappears whenever the process restarts."
+    ],
+    "architecture": [
+      "When you open the app, the browser pulls React pages from the Next.js application. Server components read their data via the shared data layer, while client components call the /api/v1 endpoints. Before any protected page or API route runs, middleware validates the NextAuth session and the user's role. The data layer will use Prisma if a database URL is set; otherwise it falls back to an in‑memory seed for the classroom demo.",
+      "The gate node and the scale node live outside the website. When the gate node reads an RFID tag, it posts it to the gate-verify endpoint and waits for a gate‑open decision plus a barrier pulse. Meanwhile, the scale node pushes gross and tare readings to the weighbridge endpoint. All communication follows a hardware protocol that includes HMAC headers; checking those headers on the server will be our next hardware milestone. Should the network go down, the scale node can buffer packets in LittleFS and later flush them via the batch‑sync endpoint. There's also an optional Ollama client that can generate booking advice, but it doesn't tie into the core booking or weighing flow."
+    ],
+    "workflow": [
+      "The farmer logs in, opens the farmer portal, and sees a list of mandis with distance and remaining capacity. He picks a mandi, chooses a crop, enters an estimated weight and a one‑hour arrival window, then hits submit. The server checks the input, creates a booking record and sends back a gate pass token. When the vehicle arrives at the mandi, the gate desk scans the RFID tag or QR pass. The gate-verify endpoint looks up the booking, confirms it’s still valid, updates the status to GATE_VERIFIED and returns a gate‑open decision.",
+      "After the vehicle reaches the weighbridge, the scale node first sends the gross weight and later the tare weight to the weighbridge endpoint. The server saves both numbers, works out the net weight, updates any payout fields that have a rate, and logs the telemetry. Meanwhile, the queue ledger pulls the same booking records and displays how many vehicles are waiting, how many have cleared the gate, how many are currently being weighed, and how many are finished. When a device has been offline, its buffered packets get sent via batch‑sync and are handled exactly the same way."
+    ],
+    "ui_overview": [
+      "The interface follows a glassy‑clay look, with soft translucent cards, rounded corners, a light background and a bold emerald primary colour. Emerald marks primary actions and successful checks, amber signals waiting or capacity warnings, red indicates errors, and slate is used for body text. The farmer flow is built as a step‑by‑step wizard so users never have to grasp the whole system at once. On the gate and weighbridge screens the controls are large, because they’re meant to be used at a desk or a busy outdoor counter.",
+      "Everything scales nicely thanks to a responsive layout that relies on just a handful of repeated cards, tables and badges. We kept the labels simple and in plain language, and we always pair status colours with text so you don’t have to guess the meaning from colour alone. Right now the build still shows a login wall and a couple of routes that are just placeholders; the plan is to make the landing page public and replace those placeholder screens with actual pages."
+    ],
+    "usability": [
+      "Every screen uses the same header, card style, and button treatment, so navigation feels consistent. We put the important actions at the bottom of the form flow, while any destructive or irreversible actions sit off the main path. Labels and validation messages are clear on the form fields, and the booking wizard always shows the farmer’s earlier choices.",
+      "We went with high‑contrast text, short headings and a small colour palette to keep things readable. The touch targets are big enough for a phone or a counter tablet, and on narrow screens the tables turn into cards whenever we can. We haven’t finished an accessibility audit, but the design steers clear of colour‑only status cues, makes focus styles obvious and uses semantic buttons and labels. The biggest usability issue right now is that there’s no public landing page and a few operator routes point to pages that haven’t been built yet."
+    ],
+    "db_overview": [
+      "We built the project around a relational model. Locally we use SQLite, and thanks to the libSQL adapter the identical schema works on Turso as well. Prisma serves as the sole access layer: its schema describes the tables, migrations spin them up, and the generated client lets the app run typed queries. If the database URL isn’t set, the runtime falls back to an in‑memory seed—handy for a fast demo, but you wouldn’t want that in production.",
+      "The main entities are User, Mandi, Slot, Booking, Telemetry, and Task. A user can make many bookings, a mandi has many slots and many bookings, a slot belongs to one booking, and a booking has many telemetry readings. Tasks connect a user and optionally a booking to follow-up work. This structure keeps the queue, gate, and weighbridge views on the same records instead of separate spreadsheets."
+    ],
+    "data_management": [
+      "We add new bookings via the booking service, while any status updates go through the gate and weighbridge services. For reads we rely on typed Prisma queries, and the queue view pulls together counts from the same booking table. Our schema enforces a unique email for each user and a unique slot for each booking, so two bookings can’t end up with the same slot.",
+      "Zod takes care of validating telemetry payloads and query parameters, and the booking route does its own explicit checks for required fields and coordinate ranges. Sensitive values—password hashes and API secrets—stay on the server, and we store passwords with bcrypt instead of plain text. The only data risks left are the in‑memory fallback, the JSON‑file user store, and the missing server‑side device signature verification; we point those out in the limitations."
+    ],
+    "conclusion": [
+      "We’ve got a working prototype of the whole mandi flow in MandiSync. A farmer can book a slot, the gate desk can check the arrival, the weighbridge logs both gross and tare weights, and the queue ledger displays the current state. The project also delivered a real Prisma data model, a REST API, a design system, and a separate hardware tree with sketches for the gate and scale. Now the team can walk through the idea from start to finish and point out how each piece is supposed to work.",
+      "We’re not at production quality yet. Things like automated tests, a reliable default database, database‑backed users, device HMAC verification, and a proper deployment pipeline still need to be done. Since we’ve logged all those missing pieces, the report calls MandiSync a solid prototype instead of a finished commercial product. The base is solid enough that the next phase can concentrate on hardening rather than redesigning."
+    ],
+    "limitations": [
+      "If DATABASE_URL isn’t set, the default runtime just uses an in‑memory database, so everything gets wiped when you restart.",
+      "We’re still keeping users in data/users.json instead of using the Prisma User table.",
+      "We haven’t added HMAC verification for device requests on the server yet, and the middleware is currently blocking any telemetry calls that aren’t authenticated.",
+      "We don’t have an automated unit, integration, or end‑to‑end test suite yet, and the CI test step still isn’t connected to a real runner.",
+      "We still need to finish the public landing page, get the /demo route working, add password reset, make offline IndexedDB passes functional, and generate PDF receipts.",
+      "We still have debug and test API routes in the build, so we need to strip them out or lock them down before any public deployment."
+    ],
+    "future": [
+      "We shifted all user and session data into the database, then built out signup, password‑reset, and admin user‑management features.",
+      "We added device HMAC verification, built a heartbeat endpoint, and created a device provisioning screen.",
+      "Swap out the in‑memory fallback for a single, explicit database configuration, and make sure to await each Prisma call.",
+      "We added Vitest unit tests and Playwright end‑to‑end tests, then set up a CI pipeline that runs lint, type‑check, test and build.",
+      "First we add server-sent events or polling for the live queue, then we build the farmer and official route groups.",
+      "First I removed the hardware viewer from the website. Then I kept the device code in the hardware tree and added a real pilot checklist."
+    ]
+  },
+  "MODULES": [
+    [
+      "Farmer Portal",
+      "We built a guided booking flow where a farmer picks a mandi, selects the crop, enters the estimated weight and chooses an arrival window. After that, the system shows the booking status and generates a gate pass.",
+      "Farmer details, mandi, slot, crop, weight, vehicle number and RFID tag",
+      "Booking record and a signed gate pass"
+    ],
+    [
+      "Gate Control Desk",
+      "First it checks the RFID tag or gate pass, then updates the booking status, and finally tells the barrier whether it should open.",
+      "RFID tag or pass payload",
+      "Gate-open decision, barrier pulse and booking status"
+    ],
+    [
+      "Weighbridge Bench",
+      "We pull the gross and tare readings from the scale node, work out the net weight, and then save the telemetry.",
+      "Weight, measurement type, moisture and device ID",
+      "Net weight, payout fields and a telemetry log"
+    ],
+    [
+      "Queue Ledger",
+      "The screen lists waiting, gate‑verified, weighing and completed vehicles, and it also shows the total procured weight.",
+      "Optional mandi filter",
+      "Booking list, queue counts and daily metrics"
+    ],
+    [
+      "Auth and Admin",
+      "It takes care of login, manages sessions, checks user roles, and guards protected routes.",
+      "Email and password",
+      "Session token and a role-based view"
+    ],
+    [
+      "Hardware Ingestion",
+      "We pull in gate and scale telemetry, and we also handle offline batches that come from LittleFS.",
+      "Signed JSON packets from ESP32 nodes",
+      "Stored telemetry, updated bookings and a sync result"
+    ]
+  ],
+  "SEGMENTS": [
+    {
+      "number": "01",
+      "slug": "01-big-picture",
+      "title": "The Big Picture",
+      "owner": "Amro",
+      "owner_area": "Middleware & Security",
+      "one_minute": "MandiSync is a shared system for booking a mandi slot, checking the gate and recording weight. It swaps paper slips and phone calls for one live record.",
+      "body": [
+        "When a farmer opens MandiSync, they see nearby mandis, check the remaining capacity and book a one‑hour arrival window. Once at the mandi, the gate desk scans the RFID tag or QR pass. The weighbridge records both gross and tare weights, and the queue ledger updates for everyone.",
+        "Mandis still rely on physical queues, handwritten registers and repeated phone calls, which is why the project exists. Farmers end up traveling without knowing the wait, and staff end up copying the same details into more than one place. MandiSync keeps a single record from booking all the way to completion."
+      ],
+      "key_terms": [
+        [
+          "Mandi",
+          "A regulated agricultural market where farmers bring produce to be weighed and sold."
+        ],
+        [
+          "Slot",
+          "A one-hour arrival window that a farmer books in advance."
+        ],
+        [
+          "Gate pass",
+          "A signed token or QR code that proves a booking is valid at the gate."
+        ],
+        [
+          "Telemetry",
+          "A reading sent by a device, such as an RFID scan or a scale weight."
+        ]
+      ],
+      "objectives": [
+        "Provide a simple farmer portal for checking nearby mandis and booking an arrival slot.",
+        "Verify gate entry using an RFID tag or QR pass and update the booking status.",
+        "Capture gross and tare weights from an ESP32 and HX711 scale and calculate net weight.",
+        "Show a live queue ledger with waiting, gate-verified, weighing and completed vehicles.",
+        "Build a modular foundation that can be hardened for real deployment with a durable database, device authentication and automated tests."
+      ],
+      "takeaway": "Basically, a single booking record sticks with the farmer as they move from the phone, through the gate, onto the scale, and finally into the queue status."
+    },
+    {
+      "number": "02",
+      "slug": "02-how-we-planned",
+      "title": "How We Planned It",
+      "owner": "Francis Masanja",
+      "owner_area": "Hardware Integration",
+      "one_minute": "First we broke the project into phases, then we kept an eye on actual progress by looking at the git history. We also picked a small tech stack that we knew the team could wrap up within a single semester.",
+      "body": [
+        "We kicked off by doing requirement analysis and looking into how mandis handle arrivals today. After that we sketched out the screens, set up the database and defined the API, then moved on to building the farmer, gate, weighbridge and queue views. To keep things clean, we isolated the hardware tree, making sure the website never relies on a serial port.",
+        "We based the timeline on the actual commit dates whenever they were available. The first commit happened on 6 September 2026. The main UI and API rebuild landed on 18 September, and security and validation followed on 21 September. The final audit and bug fixes were merged on 29 October. Documentation is still in progress."
+      ],
+      "key_terms": [
+        [
+          "Next.js",
+          "The web framework that provides both the pages and the API routes."
+        ],
+        [
+          "Prisma",
+          "The database toolkit that turns the schema into typed queries."
+        ],
+        [
+          "Turso / libSQL",
+          "A hosted SQLite-compatible database option."
+        ],
+        [
+          "ESP32",
+          "A small Wi-Fi microcontroller used for the gate and scale nodes."
+        ]
+      ],
+      "objectives": [
+        "Use a single TypeScript codebase for the UI and API.",
+        "Keep local development simple with SQLite.",
+        "Keep hardware code outside the website.",
+        "Use git history to report real dates rather than invented ones."
+      ],
+      "takeaway": "We kept the scope intentionally tiny—just a single web app, a single data model, and two device nodes. That made the semester project doable."
+    },
+    {
+      "number": "03",
+      "slug": "03-how-it-works",
+      "title": "How It Works",
+      "owner": "Omer",
+      "owner_area": "Backend",
+      "one_minute": "The browser talks to Next.js, which in turn talks to Prisma, and the ESP32 nodes send data to the API. Both the gate and scale readings end up in the same booking record.",
+      "body": [
+        "When the browser loads the React pages, the server components pull data from the shared data layer, while the client components call the v1 API routes. Before any protected page or API call goes through, middleware checks the session and the user’s role.",
+        "The gate node posts an RFID tag to the gate-verify endpoint and receives a gate‑open decision. Meanwhile, the scale node sends gross and tare weights to the weighbridge endpoint. On the server side the readings are stored, the net weight is calculated, the booking gets updated, and a telemetry log is written. Finally, the queue ledger reads the same booking table."
+      ],
+      "key_terms": [
+        [
+          "Route handler",
+          "A server function under app/api that handles an HTTP request."
+        ],
+        [
+          "Middleware",
+          "Code that runs before a request reaches a page or route."
+        ],
+        [
+          "HMAC",
+          "A keyed hash used to prove that a device request is genuine."
+        ],
+        [
+          "LittleFS",
+          "A small file system on the ESP32 used to buffer readings when Wi-Fi is down."
+        ]
+      ],
+      "objectives": [
+        "Show the architecture from browser to database.",
+        "Explain the gate and scale telemetry path.",
+        "Show how one booking record stays consistent across screens.",
+        "Point out which parts are still prototype-level."
+      ],
+      "takeaway": "The backend ties everything together. It validates the request, updates one booking record, and returns the result that the gate, scale, and queue screens all share."
+    },
+    {
+      "number": "04",
+      "slug": "04-what-users-see",
+      "title": "What Users See",
+      "owner": "Minza Aron",
+      "owner_area": "Frontend",
+      "one_minute": "We used soft glass cards on the screens, paired with a green primary colour and a step‑by‑step booking flow. For the gate and weighbridge screens, the controls are large to handle a busy counter.",
+      "body": [
+        "Using the farmer portal feels like a wizard: you pick a mandi, then select the crop and its weight, set a time window, and press confirm. At the gate desk you see the scanned tag, the booking and whether it’s open or denied. The weighbridge screen displays the current weight along with the gross and tare actions. Meanwhile, the queue ledger lists the live list and shows the daily counts.",
+        "The design sticks with emerald for primary actions and success, amber when something’s waiting or hitting a capacity limit, red for any errors, and slate for regular text. We always show the status both as text and in colour. Because the layout is responsive, the main controls are big enough to work comfortably on a phone or a counter tablet."
+      ],
+      "key_terms": [
+        [
+          "Glassy-clay",
+          "A visual style with translucent cards, soft shadows and rounded corners."
+        ],
+        [
+          "Wizard",
+          "A form split into steps so the user only sees one decision at a time."
+        ],
+        [
+          "Responsive",
+          "A layout that adapts to phone, tablet and desktop widths."
+        ],
+        [
+          "Contrast",
+          "The difference between text and background; higher contrast is easier to read."
+        ]
+      ],
+      "objectives": [
+        "Make the farmer flow easy to follow without training.",
+        "Make gate and weigh actions large and obvious.",
+        "Keep status readable without relying on colour alone.",
+        "Show both wireframes and real screenshots."
+      ],
+      "takeaway": "Because the mandi is noisy and hectic, we made the UI use big buttons, simple labels, and an obvious next step."
+    },
+    {
+      "number": "05",
+      "slug": "05-data-team-next-steps",
+      "title": "Data, Team and Next Steps",
+      "owner": "Vikie",
+      "owner_area": "Database",
+      "one_minute": "We’ve got six tables that cover everything: users, mandis, slots, bookings, telemetry and tasks. The prototype is functional, but we still need to harden it for production.",
+      "body": [
+        "The database is relational. One user can make many bookings, and each mandi contains multiple slots and bookings. A slot is tied to a single booking, while a booking can have lots of telemetry readings. Tasks link a user—and occasionally a booking—to any follow‑up work. Prisma handles the schema and migrations, and the actual data lives in SQLite or Turso.",
+        "We divided the tasks according to technical area—hardware, frontend, middleware, backend, and database. Everyone also takes charge of a report section and an HTML study guide. We’re upfront about what still needs to be done: automated tests, database‑backed users, device HMAC verification, a public landing page, and a real deployment pipeline."
+      ],
+      "key_terms": [
+        [
+          "Primary key",
+          "A column that uniquely identifies each row."
+        ],
+        [
+          "Foreign key",
+          "A column that points to a row in another table."
+        ],
+        [
+          "Migration",
+          "A versioned SQL change that updates the database schema."
+        ],
+        [
+          "HMAC verification",
+          "The server checks that a device request was signed with the correct secret."
+        ]
+      ],
+      "objectives": [
+        "Explain the six main tables and their relationships.",
+        "Show how validation and access control protect the data.",
+        "Make each member's contribution clear.",
+        "Separate what is finished from what is still planned."
+      ],
+      "takeaway": "The data model forms the backbone of the project, and because we split the team, it’s easy to see who owns each part."
+    }
+  ]
+}

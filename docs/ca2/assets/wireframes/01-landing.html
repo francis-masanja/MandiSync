@@ -1,0 +1,67 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Landing</title><style>
+* { box-sizing: border-box; }
+body { margin: 0; background: #eef2f6; font-family: "Segoe UI", system-ui, sans-serif; color: #1f2937; }
+.browser { width: 1400px; height: 940px; margin: 20px auto; background: #fff; border: 2px solid #94a3b8; border-radius: 16px; overflow: hidden; box-shadow: 0 18px 40px rgba(15,23,42,.12); }
+.chrome { height: 42px; background: #f1f5f9; border-bottom: 1px solid #cbd5e1; display: flex; align-items: center; gap: 8px; padding: 0 16px; }
+.dot { width: 11px; height: 11px; border-radius: 50%; background: #cbd5e1; }
+.url { margin-left: 12px; flex: 1; height: 24px; background: #fff; border: 1px solid #cbd5e1; border-radius: 7px; font-size: 12px; color: #64748b; display: flex; align-items: center; padding: 0 10px; }
+.page { padding: 26px 32px; }
+.top { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #cbd5e1; padding-bottom: 14px; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.logo { width: 42px; height: 42px; border: 2px dashed #64748b; border-radius: 10px; display: grid; place-items: center; font-weight: 800; color: #475569; }
+h1 { font-size: 24px; margin: 0; }
+h2 { font-size: 20px; margin: 0 0 6px; }
+h3 { font-size: 15px; margin: 0 0 8px; }
+.muted { color: #64748b; font-size: 13px; }
+.pill { border: 1.5px dashed #64748b; border-radius: 999px; padding: 6px 14px; font-size: 12px; color: #475569; }
+.grid { display: grid; gap: 16px; }
+.g2 { grid-template-columns: 1fr 1fr; }
+.g3 { grid-template-columns: repeat(3, 1fr); }
+.g4 { grid-template-columns: repeat(4, 1fr); }
+.card { border: 2px dashed #94a3b8; border-radius: 12px; padding: 16px; background: #fbfdff; }
+.card.solid { border-style: solid; }
+.box { height: 38px; border: 1.5px dashed #94a3b8; border-radius: 8px; background: #fff; margin: 8px 0; }
+.box.tall { height: 78px; }
+.btn { display: inline-block; border: 2px solid #475569; border-radius: 8px; padding: 10px 18px; font-size: 13px; font-weight: 700; color: #1f2937; background: #f8fafc; }
+.btn.primary { background: #e2e8f0; border-color: #334155; }
+.nav { display: flex; gap: 10px; }
+.nav .item { padding: 8px 14px; border: 1.5px dashed #94a3b8; border-radius: 8px; font-size: 12px; }
+.sidebar { display: grid; grid-template-columns: 240px 1fr; gap: 20px; }
+.stat { border: 2px dashed #94a3b8; border-radius: 12px; padding: 14px; }
+.stat b { display: block; font-size: 24px; margin-top: 4px; }
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th, .table td { border: 1.5px dashed #94a3b8; padding: 9px 10px; text-align: left; }
+.center { display: flex; align-items: center; justify-content: center; height: 720px; }
+.login { width: 420px; }
+.step { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; font-size: 13px; }
+.num { width: 26px; height: 26px; border: 2px solid #475569; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 12px; }
+.scan { height: 170px; border: 3px dashed #475569; border-radius: 12px; display: grid; place-items: center; font-size: 18px; font-weight: 700; color: #475569; }
+.bar { height: 18px; border: 2px dashed #94a3b8; border-radius: 999px; background: repeating-linear-gradient(90deg,#e2e8f0,#e2e8f0 8px,#fff 8px,#fff 16px); }
+.footer-note { margin-top: 10px; font-size: 11px; color: #64748b; text-align: center; }
+</style></head>
+<body><div class="browser">
+  <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><div class="url">mandisync.local/landing</div></div>
+  <div class="page">
+      <div class="top">
+        <div class="brand"><div class="logo">MS</div><div><h1>MandiSync</h1><div class="muted">Mandi queue and weighbridge system</div></div></div>
+        <div class="nav"><span class="item">Home</span><span class="item">Farmer</span><span class="item">Gate</span><span class="item">Queue</span><span class="item">Login</span></div>
+      </div>
+      <div style="margin-top:30px; display:grid; grid-template-columns:1.2fr .8fr; gap:24px;">
+        <div class="card solid" style="padding:30px;">
+          <div class="pill" style="display:inline-block; margin-bottom:12px;">Prototype overview</div>
+          <h2 style="font-size:34px; line-height:1.2;">Book a slot. Pass the gate. Weigh the crop.</h2>
+          <p class="muted" style="font-size:15px; max-width:540px;">One shared record for farmers, gate staff and the queue desk. The wireframe shows the intended public landing page.</p>
+          <div style="margin-top:20px;"><span class="btn primary">Book a slot</span> <span class="btn">View live queue</span></div>
+        </div>
+        <div class="card"><h3>Today at Karnal Mandi</h3><div class="bar" style="margin:12px 0;"></div><div class="muted">5,500 / 10,000 kg allocated</div><div class="box tall" style="margin-top:16px;"></div><div class="muted">Queue snapshot placeholder</div></div>
+      </div>
+      <div class="grid g4" style="margin-top:24px;">
+        <div class="card"><h3>Farmer portal</h3><div class="muted">Nearby mandis, quota and slot booking.</div></div>
+        <div class="card"><h3>Gate desk</h3><div class="muted">RFID or QR verification and barrier control.</div></div>
+        <div class="card"><h3>Weighbridge</h3><div class="muted">Gross and tare readings with net weight.</div></div>
+        <div class="card"><h3>Queue ledger</h3><div class="muted">Live positions, counts and daily totals.</div></div>
+      </div>
+      <div class="footer-note">Wireframe 1 - public landing / overview</div>
+    </div>
+</div></body></html>

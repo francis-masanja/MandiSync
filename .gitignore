@@ -6,3 +6,11 @@
 *.pem
 .env
 .env*.local
+# Build & tooling artifacts
+*.tsbuildinfo
+*.log
+.turbo
+__pycache__/
+*.pyc
+prisma/*.db
+prisma/*.db-journal

@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MandiSync — Strict Project Audit Report (2026-10-29)</title>
+<style>
+  :root {
+    --bg: #0f1419;
+    --panel: #171d24;
+    --panel2: #1d242d;
+    --border: #2a3340;
+    --text: #e7edf3;
+    --muted: #9aa8b5;
+    --green: #34d399;
+    --amber: #fbbf24;
+    --red: #f87171;
+    --blue: #60a5fa;
+    --purple: #c084fc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.55;
+  }
+  header {
+    padding: 2rem 1.5rem 1rem; border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #141b22, var(--bg));
+  }
+  header h1 { margin: 0 0 .35rem; font-size: 1.7rem; }
+  header p { margin: .2rem 0; color: var(--muted); max-width: 900px; }
+  main { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+  section { margin-bottom: 2rem; }
+  h2 {
+    font-size: 1.25rem; margin: 0 0 .8rem; padding-bottom: .4rem;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.02rem; margin: 1rem 0 .4rem; }
+  .grid { display: grid; gap: .8rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: .9rem 1rem;
+  }
+  .card .label { color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; }
+  .card .value { font-size: 1.8rem; font-weight: 700; margin-top: .2rem; }
+  .card .sub { color: var(--muted); font-size: .85rem; }
+  .g-good { color: var(--green); }
+  .g-warn { color: var(--amber); }
+  .g-bad { color: var(--red); }
+  .g-info { color: var(--blue); }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; background: var(--panel); border-radius: 10px; overflow: hidden; }
+  th, td { text-align: left; padding: .6rem .7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--panel2); color: var(--muted); font-weight: 600; font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; }
+  tr:last-child td { border-bottom: none; }
+  .badge {
+    display: inline-block; padding: .12rem .5rem; border-radius: 999px;
+    font-size: .72rem; font-weight: 700; letter-spacing: .02em;
+  }
+  .b-done { background: #064e3b; color: var(--green); }
+  .b-partial { background: #451a03; color: var(--amber); }
+  .b-missing { background: #450a0a; color: var(--red); }
+  .b-crit { background: #450a0a; color: var(--red); }
+  .b-high { background: #451a03; color: var(--amber); }
+  .b-med { background: #1e3a5f; color: var(--blue); }
+  .b-low { background: #2a3340; color: var(--muted); }
+  ul { margin: .3rem 0 .6rem 1.1rem; padding: 0; }
+  li { margin-bottom: .3rem; }
+  .callout {
+    border-left: 4px solid var(--amber); background: #2a2210;
+    padding: .8rem 1rem; border-radius: 0 8px 8px 0; margin: .8rem 0;
+  }
+  .callout.crit { border-left-color: var(--red); background: #2a1212; }
+  .callout.ok { border-left-color: var(--green); background: #102a1e; }
+  .callout.info { border-left-color: var(--blue); background: #101c2a; }
+  code, .mono { font-family: ui-monospace, "Cascadia Code", Menlo, monospace; font-size: .85em; }
+  code { background: #0b1015; padding: .08rem .35rem; border-radius: 4px; border: 1px solid var(--border); }
+  footer { color: var(--muted); font-size: .85rem; padding: 2rem 1.5rem; border-top: 1px solid var(--border); text-align: center; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 800px) { .two { grid-template-columns: 1fr; } }
+  .pill-row { display: flex; flex-wrap: wrap; gap: .4rem; margin: .4rem 0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>MandiSync — Strict Project Audit Report</h1>
+  <p><strong>Date:</strong> 2026-10-29 &nbsp;|&nbsp; <strong>Path:</strong> <code>/home/blue/Documents/School/Projects/MandiSync</code></p>
+  <p><strong>Auditor:</strong> opencode (strict project-flow audit) · Independent second opinion: Ollama <code>gpt-oss:120b-cloud</code></p>
+  <p><strong>Scope:</strong> Grade for <em>client usage</em> and as a <em>system to be operated</em>. Demo-stage aware: this report separates what is <span class="badge b-done">DONE</span> from what is <span class="badge b-missing">NOT DONE</span>.</p>
+  <div class="callout info">
+    <strong>Framework correction:</strong> The project was described as Nuxt. The codebase is actually <strong>Next.js 16 (App Router) + React 19 + TypeScript 5.9 + Tailwind CSS 4</strong>. All findings below are for Next.js.
+  </div>
+  <div class="callout ok">
+    <strong>Evidence basis:</strong> Full source walk of <code>app/</code>, <code>components/</code>, <code>lib/</code>, <code>hooks/</code>, <code>prisma/</code> · <code>npm run lint</code> <strong>PASS</strong> · <code>npm run type-check</code> <strong>PASS</strong> · <code>npm run build</code> <strong>PASS</strong> (19 routes) · CI vs scripts cross-check · Ollama grading pass.
+  </div>
+</header>
+
+<main>
+
+<section>
+  <h2>1. Executive Grades</h2>
+  <div class="grid">
+    <div class="card"><div class="label">Overall</div><div class="value g-warn">48<span style="font-size:1rem;color:var(--muted)">/100</span></div><div class="sub">Strong demo shell, weak system</div></div>
+    <div class="card"><div class="label">Client usage readiness</div><div class="value g-warn">55<span style="font-size:1rem;color:var(--muted)">/100</span></div><div class="sub">Demoable after login — with friction</div></div>
+    <div class="card"><div class="label">System / production readiness</div><div class="value g-bad">35<span style="font-size:1rem;color:var(--muted)">/100</span></div><div class="sub">Not operable as a real mandi system</div></div>
+    <div class="card"><div class="label">Demo presentation value</div><div class="value g-warn">62<span style="font-size:1rem;color:var(--muted)">/100</span></div><div class="sub">Good viva / prototype pitch</div></div>
+    <div class="card"><div class="label">Code quality</div><div class="value g-warn">62<span style="font-size:1rem;color:var(--muted)">/100</span></div><div class="sub">Lint + types clean</div></div>
+    <div class="card"><div class="label">Security</div><div class="value g-bad">38<span style="font-size:1rem;color:var(--muted)">/100</span></div><div class="sub">Headers exist; holes remain</div></div>
+    <div class="card"><div class="label">Testing</div><div class="value g-bad">5<span style="font-size:1rem;color:var(--muted)">/100</span></div><div class="sub">Zero tests; CI broken</div></div>
+    <div class="card"><div class="label">Data layer</div><div class="value g-bad">45<span style="font-size:1rem;color:var(--muted)">/100</span></div><div class="sub">In-memory is the effective DB</div></div>
+    <div class="card"><div class="label">Documentation</div><div class="value g-info">70<span style="font-size:1rem;color:var(--muted)">/100</span></div><div class="sub">Plans exist; checklist misleading</div></div>
+    <div class="card"><div class="label">Hardware / IoT path</div><div class="value g-bad">40<span style="font-size:1rem;color:var(--muted)">/100</span></div><div class="sub">UI sim only; devices blocked</div></div>
+  </div>
+  <div class="callout">
+    <strong>One-liner verdict:</strong> A visually strong mid-fidelity demo of a mandi queue + IoT weighbridge system that builds clean, but is not yet a testable, durable, or hardware-connectable system — and needs small demo-trust fixes before a strict client walkthrough.
+  </div>
+  <h3>Ollama second opinion (<code>gpt-oss:120b-cloud</code>)</h3>
+  <p class="sub" style="color:var(--muted)">Overall 42 · Client readiness 28 · System readiness 55. Ollama was stricter on client readiness (auth friction) and slightly more generous on system readiness. Final scores above are the reconciled strict assessment.</p>
+</section>
+
+<section>
+  <h2>2. Client-Usage Verdict</h2>
+  <div class="two">
+    <div class="card">
+      <h3 class="g-good" style="margin-top:0">Can demo today? YES — with caveats</h3>
+      <p style="color:var(--muted);font-size:.9rem">Demo credentials (from <code>data/users.json</code>):</p>
+      <ul>
+        <li><code>farmer@example.com</code></li>
+        <li><code>operator@example.com</code></li>
+        <li><code>admin@example.com</code></li>
+      </ul>
+      <p style="color:var(--muted);font-size:.9rem">Password hashes are bcrypt in the JSON file; passwords are demo-grade and must be treated as public.</p>
+    </div>
+    <div class="card">
+      <h3 class="g-bad" style="margin-top:0">Demo friction (strict client will notice)</h3>
+      <ul>
+        <li>Middleware forces login on <strong>every</strong> path including home <code>/</code></li>
+        <li>Home “Demo Flow” links to <code>/demo</code> — <strong>route does not exist</strong> (dead link)</li>
+        <li>Operator/admin login redirects to <code>/dashboard</code> and <code>/admin</code> — <strong>those pages do not exist</strong></li>
+        <li>UI copy claims IndexedDB offline + live hardware beyond what is coded</li>
+      </ul>
+    </div>
+  </div>
+  <div class="two" style="margin-top:1rem">
+    <div class="card">
+      <h3 class="g-good" style="margin-top:0">Safe to claim</h3>
+      <ul>
+        <li>Interactive prototype: booking → gate verify → weighbridge → queue ledger</li>
+        <li>Design system + multi-role UI exploration</li>
+        <li>REST API sketch for integration discussions</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 class="g-bad" style="margin-top:0">Unsafe to claim</h3>
+      <ul>
+        <li>Production-ready system</li>
+        <li>Real hardware connectivity to cloud</li>
+        <li>Offline-first mobile experience</li>
+        <li>Password reset / OTP onboarding</li>
+        <li>Audited security posture</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>3. System / Production Verdict</h2>
+  <div class="callout crit">
+    <strong>productionReady: false</strong>
+    <ul>
+      <li>Zero automated tests + CI runs <code>npm test</code> with no test script → pipeline is red</li>
+      <li>No durable DB in the effective runtime path (see §5 DATA-01)</li>
+      <li>No device authentication path for ESP32 (middleware redirects API → HTML login)</li>
+      <li>Debug/test endpoints exposed in the production build</li>
+      <li>No health checks, structured logging, error boundaries, or monitoring</li>
+      <li>Auth store is a committed JSON file of demo users</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>4. What Is DONE (evidence-backed)</h2>
+  <table>
+    <thead><tr><th>Feature</th><th>Status</th><th>Quality</th><th>Evidence / notes</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Multi-section demo UI (Farmer, Gate, Weigh, Queue, Firmware)</td>
+        <td><span class="badge b-done">DONE_DEMO</span></td>
+        <td class="g-good">good</td>
+        <td><code>components/FarmerPortal.tsx</code> (843 LOC 5-step wizard), GateControlDesk, HardwareBench, QueueLedger, FirmwareView; pages under <code>app/(dashboard)/</code></td>
+      </tr>
+      <tr>
+        <td>REST API v1 — 7 endpoints</td>
+        <td><span class="badge b-done">DONE_DEMO</span></td>
+        <td class="g-warn">partial</td>
+        <td><code>mandis</code>, <code>queue/status</code>, <code>bookings/create</code>, <code>telemetry/gate-verify</code>, <code>telemetry/weighbridge</code>, <code>telemetry/batch-sync</code>, <code>reset</code>. Zod on telemetry; reset has no in-handler auth</td>
+      </tr>
+      <tr>
+        <td>Email/password login (NextAuth credentials + bcrypt)</td>
+        <td><span class="badge b-done">DONE_DEMO</span></td>
+        <td class="g-bad">weak</td>
+        <td>Users from <code>data/users.json</code>, not DB. No <code>SessionProvider</code> in root layout. <code>useCurrentUser</code> is unused by any page</td>
+      </tr>
+      <tr>
+        <td>Role / permission matrix</td>
+        <td><span class="badge b-partial">DONE_PARTIAL</span></td>
+        <td class="g-warn">partial</td>
+        <td><code>lib/roles.ts</code> + middleware <code>pathRoleMap</code>; <code>/gate</code>, <code>/weigh</code>, <code>/queue</code>, <code>/firmware</code> not role-gated</td>
+      </tr>
+      <tr>
+        <td>Zod validation (telemetry + mandis query)</td>
+        <td><span class="badge b-done">DONE</span></td>
+        <td class="g-good">good</td>
+        <td><code>lib/validation/telemetry.ts</code> — but zod is only a transitive dependency</td>
+      </tr>
+      <tr>
+        <td>Security headers + CSP in middleware</td>
+        <td><span class="badge b-partial">DONE_PARTIAL</span></td>
+        <td class="g-bad">weak</td>
+        <td><code>unsafe-inline</code> + <code>unsafe-eval</code> present; Permissions-Policy blocks camera/geolocation (may break future QR/GPS)</td>
+      </tr>
+      <tr>
+        <td>In-memory rate limiting</td>
+        <td><span class="badge b-done">DONE_DEMO</span></td>
+        <td class="g-bad">weak</td>
+        <td><code>lib/rate-limit.ts</code> + auth limiter — per-process Map, not multi-instance safe</td>
+      </tr>
+      <tr>
+        <td>HMAC-SHA256 gate token helpers</td>
+        <td><span class="badge b-done">DONE</span></td>
+        <td class="g-good">good</td>
+        <td><code>lib/crypto.ts</code>; prebuild secret-scan script in <code>package.json</code></td>
+      </tr>
+      <tr>
+        <td>Haversine distance / mandi ranking</td>
+        <td><span class="badge b-done">DONE</span></td>
+        <td class="g-good">good</td>
+        <td><code>lib/spatial.ts</code> used in db + FarmerPortal</td>
+      </tr>
+      <tr>
+        <td>Virtual hardware bench + Web Serial + firmware viewer</td>
+        <td><span class="badge b-done">DONE_DEMO</span></td>
+        <td class="g-good">good</td>
+        <td><code>lib/web-serial.ts</code>, <code>lib/firmware.ts</code>; firmware uses <code>YOUR_WIFI_SSID</code> placeholders (good)</td>
+      </tr>
+      <tr>
+        <td>Ollama AI advisor client</td>
+        <td><span class="badge b-partial">DONE_PARTIAL</span></td>
+        <td class="g-bad">weak</td>
+        <td><code>lib/ai.ts</code> exists but not wired into UI; default model <code>gemma4:31b</code> looks incorrect</td>
+      </tr>
+      <tr>
+        <td>Lint · type-check · production build</td>
+        <td><span class="badge b-done">DONE</span></td>
+        <td class="g-good">good</td>
+        <td>All three exit 0 locally; Next.js 16.3.5 build succeeds</td>
+      </tr>
+      <tr>
+        <td>Architecture + phased plan docs</td>
+        <td><span class="badge b-done">DONE</span></td>
+        <td class="g-info">good</td>
+        <td><code>docs/plans/MASTER_PLAN.md</code> honestly marks tests/auth incomplete; TODO_CHECKLIST shows phase ✅ while every box is still <code>[ ]</code> — misleading</td>
+      </tr>
+      <tr>
+        <td>Prisma schema + 3 migrations</td>
+        <td><span class="badge b-partial">DONE_PARTIAL</span></td>
+        <td class="g-warn">partial</td>
+        <td>User/Mandi/Slot/Booking/Telemetry/Task models; runtime path not proven — env mismatch (see §5)</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>5. What Is NOT DONE</h2>
+  <table>
+    <thead><tr><th>Feature</th><th>Status</th><th>Severity</th><th>Evidence / impact</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Unit / integration / E2E tests</td>
+        <td><span class="badge b-missing">NOT_DONE</span></td>
+        <td><span class="badge b-crit">critical</span></td>
+        <td>No <code>*.test.*</code> / <code>*.spec.*</code>; no <code>test</code> script → CI red; no regression net</td>
+      </tr>
+      <tr>
+        <td>Working CI pipeline</td>
+        <td><span class="badge b-missing">NOT_DONE</span></td>
+        <td><span class="badge b-crit">critical</span></td>
+        <td><code>ci.yml</code> runs <code>npm test</code>; <code>npm audit</code> soft-fails</td>
+      </tr>
+      <tr>
+        <td>Production DB wiring (Turso/SQLite actually used)</td>
+        <td><span class="badge b-missing">NOT_DONE</span></td>
+        <td><span class="badge b-crit">critical</span></td>
+        <td><code>.env</code> has <code>TURSO_*</code>; code reads <code>DATABASE_URL</code> only → silent in-memory mode; data lost on restart</td>
+      </tr>
+      <tr>
+        <td>Correct Prisma code path</td>
+        <td><span class="badge b-missing">NOT_DONE</span></td>
+        <td><span class="badge b-high">high</span></td>
+        <td><code>bookings/create</code> does not <code>await db.createBooking()</code>; mandis route embeds <code>getSlotsForMandi()</code> without await; <code>resetDemoData</code> is a no-op</td>
+      </tr>
+      <tr>
+        <td>SessionProvider + real client session usage</td>
+        <td><span class="badge b-missing">NOT_DONE</span></td>
+        <td><span class="badge b-high">high</span></td>
+        <td>No provider in <code>app/layout.tsx</code>; <code>useCurrentUser</code> unused</td>
+      </tr>
+      <tr>
+        <td>Device / API-key auth for ESP32 telemetry</td>
+        <td><span class="badge b-missing">NOT_DONE</span></td>
+        <td><span class="badge b-crit">critical</span></td>
+        <td>Middleware redirects unauthenticated <code>/api/v1/telemetry/*</code> to HTML <code>/login</code> → real hardware cannot call gate-verify / weighbridge / batch-sync</td>
+      </tr>
+      <tr>
+        <td>In-handler auth on <code>/api/v1/reset</code></td>
+        <td><span class="badge b-missing">NOT_DONE</span></td>
+        <td><span class="badge b-high">high</span></td>
+        <td>No <code>getToken</code>/role check inside the route; only middleware prefix map</td>
+      </tr>
+      <tr>
+        <td>Removal/protection of debug &amp; test APIs</td>
+        <td><span class="badge b-missing">NOT_DONE</span></td>
+        <td><span class="badge b-crit">critical</span></td>
+        <td>Production build exposes <code>/api/debug/env</code> and 6 × <code>/api/test-*</code></td>
+      </tr>
+      <tr>
+        <td>Working <code>/demo</code> route + public landing</td>
+        <td><span class="badge b-missing">NOT_DONE</span></td>
+        <td><span class="badge b-high">high</span></td>
+        <td><code>app/(demo)/page.tsx</code> resolves to <code>/</code> (conflicts with <code>app/page.tsx</code>); landing links to missing <code>/demo</code>; middleware requires login even on <code>/</code></td>
+      </tr>
+      <tr>
+        <td>Password reset flow</td>
+        <td><span class="badge b-missing">NOT_DONE</span></td>
+        <td><span class="badge b-med">medium</span></td>
+        <td><code>forgot-password/page.tsx</code> is UI-only <code>setState</code>; no API, no email</td>
+      </tr>
+      <tr>
+        <td>Phone OTP authentication</td>
+        <td><span class="badge b-missing">NOT_DONE</span></td>
+        <td><span class="badge b-med">medium</span></td>
+        <td>Planned Phase 2/3; no provider integrated</td>
+      </tr>
+      <tr>
+        <td>IndexedDB offline pass cache / sync</td>
+        <td><span class="badge b-missing">NOT_DONE</span></td>
+        <td><span class="badge b-med">medium</span></td>
+        <td>UI strings claim IndexedDB; no IndexedDB code in <code>lib/</code></td>
+      </tr>
+      <tr>
+        <td>PDF receipt download</td>
+        <td><span class="badge b-missing">NOT_DONE</span></td>
+        <td><span class="badge b-med">medium</span></td>
+        <td>Phase 3 item; no PDF library or route</td>
+      </tr>
+      <tr>
+        <td>Dedicated <code>/official/*</code> and <code>/farmer/*</code> sub-flows + real <code>/dashboard</code> &amp; <code>/admin</code></td>
+        <td><span class="badge b-missing">NOT_DONE</span></td>
+        <td><span class="badge b-high">high</span></td>
+        <td>Only single pages exist; middleware expects <code>/dashboard</code> and <code>/admin</code> which 404 after login</td>
+      </tr>
+      <tr>
+        <td>React Query / live polling data layer</td>
+        <td><span class="badge b-missing">NOT_DONE</span></td>
+        <td><span class="badge b-med">medium</span></td>
+        <td>Pages are one-shot server reads; no client refetch</td>
+      </tr>
+      <tr>
+        <td><code>/api/health</code>, Pino logging, <code>global-error.tsx</code></td>
+        <td><span class="badge b-missing">NOT_DONE</span></td>
+        <td><span class="badge b-med">medium</span></td>
+        <td>No health route, no error boundary files; <code>console.error</code> only</td>
+      </tr>
+      <tr>
+        <td>Uptime monitor, runbook, CHANGELOG, release workflow, demo video</td>
+        <td><span class="badge b-missing">NOT_DONE</span></td>
+        <td><span class="badge b-low">low</span></td>
+        <td>Phase 5/6 items absent</td>
+      </tr>
+      <tr>
+        <td>Distributed rate limiting (Redis/Upstash)</td>
+        <td><span class="badge b-missing">NOT_DONE</span></td>
+        <td><span class="badge b-med">medium</span></td>
+        <td>Not safe behind multiple serverless instances</td>
+      </tr>
+      <tr>
+        <td>AI advisor surfaced in UI</td>
+        <td><span class="badge b-missing">NOT_DONE</span></td>
+        <td><span class="badge b-low">low</span></td>
+        <td><code>lib/ai.ts</code> unused by any route/component</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>6. Critical Issues (strict list)</h2>
+  <table>
+    <thead><tr><th>ID</th><th>Issue</th><th>Sev</th><th>Recommendation</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">CI-01</td><td>CI runs <code>npm test</code> but no test script exists</td><td><span class="badge b-crit">critical</span></td><td>Add Vitest + minimal suite, or remove the step until tests exist</td></tr>
+      <tr><td class="mono">SEC-01</td><td>Debug/test API routes deployed in production build</td><td><span class="badge b-crit">critical</span></td><td>Delete or gate behind <code>NODE_ENV!=='production'</code> + admin auth</td></tr>
+      <tr><td class="mono">HW-01</td><td>ESP32 cannot authenticate — middleware redirects API → HTML login</td><td><span class="badge b-crit">critical</span></td><td>Device HMAC/API-key auth for telemetry; never redirect API to HTML</td></tr>
+      <tr><td class="mono">DATA-01</td><td><code>TURSO_*</code> env set but code reads <code>DATABASE_URL</code> — silently in-memory</td><td><span class="badge b-crit">critical</span></td><td>Unify env contract; wire Prisma + <code>TURSO_AUTH_TOKEN</code>; smoke-test DB mode</td></tr>
+      <tr><td class="mono">AUTH-01</td><td>File-based auth; no SessionProvider; operator/admin land on missing routes</td><td><span class="badge b-crit">critical</span></td><td>Users → DB; add SessionProvider; create <code>/dashboard</code> &amp; <code>/admin</code> or retarget redirects</td></tr>
+      <tr><td class="mono">ROUTE-01</td><td>Landing requires login; <code>/demo</code> broken; <code>/</code> double-defined</td><td><span class="badge b-high">high</span></td><td>Public <code>/</code> and <code>/demo</code>; allowlist public paths in middleware</td></tr>
+      <tr><td class="mono">SEC-02</td><td><code>/api/v1/reset</code> has no handler-level authorization</td><td><span class="badge b-high">high</span></td><td>Require admin token inside the handler</td></tr>
+      <tr><td class="mono">DB-02</td><td>Prisma path bugs: unawaited calls, no-op reset</td><td><span class="badge b-high">high</span></td><td>Await all db calls; implement real reset or remove endpoint</td></tr>
+      <tr><td class="mono">DEP-01</td><td><code>zod</code> imported but not a direct dependency</td><td><span class="badge b-high">high</span></td><td>Add <code>"zod"</code> to <code>dependencies</code> and pin</td></tr>
+      <tr><td class="mono">SEC-03</td><td>CSP allows <code>unsafe-inline</code> and <code>unsafe-eval</code></td><td><span class="badge b-med">medium</span></td><td>Nonce-based CSP in production; drop <code>unsafe-eval</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>7. Scorecard by Dimension</h2>
+  <table>
+    <thead><tr><th>Dimension</th><th>Score</th><th>Grade</th><th>Done</th><th>Gap</th></tr></thead>
+    <tbody>
+      <tr><td>UI / UX demo quality</td><td>68</td><td class="g-warn">C+</td><td>5-section dashboard, booking wizard, queue table</td><td>Auth wall on landing; broken /demo; missing dashboards</td></tr>
+      <tr><td>API surface</td><td>58</td><td class="g-warn">C</td><td>7 v1 endpoints, Zod on telemetry</td><td>No device auth; reset open in-handler; role map incomplete</td></tr>
+      <tr><td>Auth &amp; RBAC</td><td>40</td><td class="g-bad">D</td><td>NextAuth credentials, roles enum, permission map</td><td>JSON users, no SessionProvider, dead redirects</td></tr>
+      <tr><td>Data layer</td><td>45</td><td class="g-bad">D+</td><td>In-memory demo DB + Prisma schema/migrations</td><td>Env mismatch; Prisma path bugs; no-op reset</td></tr>
+      <tr><td>Testing &amp; CI</td><td>8</td><td class="g-bad">F</td><td>CI YAML skeleton; lint+type steps</td><td>Zero tests; npm test missing; audit soft-fails</td></tr>
+      <tr><td>Security</td><td>38</td><td class="g-bad">D</td><td>bcrypt, HMAC, headers, rate-limit helpers, prebuild scan</td><td>Debug routes, CSP unsafe-*, file users, reset hole</td></tr>
+      <tr><td>Hardware / IoT path</td><td>40</td><td class="g-bad">D+</td><td>Web Serial, firmware viewer, virtual bench, batch-sync shape</td><td>No device keys; no flash guide; no /admin/devices</td></tr>
+      <tr><td>Docs &amp; planning</td><td>70</td><td class="g-info">B-</td><td>MASTER_PLAN, phase docs, architecture docs</td><td>Checklist falsely marks phases ✅; some docs stale</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>8. Phase Status vs Plans</h2>
+  <table>
+    <thead><tr><th>Phase</th><th>Actual</th><th>Note</th></tr></thead>
+    <tbody>
+      <tr><td>1 – Test infrastructure</td><td><span class="badge b-missing">NOT_STARTED</span></td><td>No Vitest/Playwright; CI test step will fail</td></tr>
+      <tr><td>2 – Production hardening</td><td><span class="badge b-partial">PARTIAL</span></td><td>Auth skeleton + rate limit + Zod exist; DB env, logging, health, OTP, global-error missing</td></tr>
+      <tr><td>3 – Farmer &amp; official flows</td><td><span class="badge b-partial">PARTIAL_UI_ONLY</span></td><td>Single-page portals; dedicated routes, React Query, IndexedDB, PDF, dashboards missing</td></tr>
+      <tr><td>4 – Hardware integration</td><td><span class="badge b-partial">PARTIAL</span></td><td>Serial + firmware view; device registration / API keys / flash guide missing</td></tr>
+      <tr><td>5 – Monitoring &amp; ops</td><td><span class="badge b-missing">NOT_STARTED</span></td><td>No Pino, runbook, uptime workflow</td></tr>
+      <tr><td>6 – Docs &amp; release</td><td><span class="badge b-partial">PARTIAL</span></td><td>Good internal docs; no CONTRIBUTING, CHANGELOG, release workflow, demo video</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>9. Prioritized Recommendations</h2>
+  <table>
+    <thead><tr><th>#</th><th>Action</th><th>Effort</th><th>Impact</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Fix demo flow for client walkthrough: public landing, working <code>/demo</code>, retarget operator/admin redirects to existing pages</td><td class="g-good">S</td><td>Immediate client-demo credibility</td></tr>
+      <tr><td>2</td><td>Delete or production-gate all <code>/api/debug/*</code> and <code>/api/test-*</code></td><td class="g-good">S</td><td>Closes obvious attack surface</td></tr>
+      <tr><td>3</td><td>Declare <code>zod</code>; align <code>DATABASE_URL</code> vs <code>TURSO_*</code>; await Prisma calls; implement or remove reset</td><td class="g-good">S</td><td>Prevents silent data-mode and API breakage</td></tr>
+      <tr><td>4</td><td>Vitest for <code>spatial</code>, <code>crypto</code>, <code>validation</code>, API routes; real CI test runner; enforce lint/type/test/build</td><td class="g-warn">M</td><td>Restores CI trust and regression safety</td></tr>
+      <tr><td>5</td><td>Device API-key/HMAC auth for telemetry; stop middleware redirecting API → HTML</td><td class="g-warn">M</td><td>Unlocks real ESP32 integration path</td></tr>
+      <tr><td>6</td><td>SessionProvider; users in Prisma; <code>/api/health</code>; <code>global-error.tsx</code>; structured logs</td><td class="g-warn">M</td><td>Baseline production hardening</td></tr>
+      <tr><td>7</td><td>Implement IndexedDB offline + PDF receipts <em>or</em> remove those UI claims before client review</td><td class="g-warn">M</td><td>Avoids demo honesty gap</td></tr>
+      <tr><td>8</td><td>Distributed rate limiting, tighter CSP, hard-fail npm audit in CI</td><td class="g-warn">M</td><td>Security posture for any hosted demo</td></tr>
+      <tr><td>9</td><td>Reconcile docs: fix TODO_CHECKLIST false ✅ phase marks; MASTER_PLAN status table = source of truth</td><td class="g-good">S</td><td>Stakeholder trust</td></tr>
+      <tr><td>10</td><td>Only after P1–P6: official dashboards, OTP, live queue polling, AI advisor UI, hardware flash guide</td><td class="g-bad">L</td><td>Completes product vision</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>10. Final Verdict</h2>
+  <div class="two">
+    <div class="card">
+      <h3 class="g-good" style="margin-top:0">Ready for</h3>
+      <ul>
+        <li>Internal demo / viva presentation with pre-shared credentials</li>
+        <li>UI/UX and API contract discussion</li>
+        <li>Continuation as a student project base</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 class="g-bad" style="margin-top:0">Not ready for</h3>
+      <ul>
+        <li>Client acceptance as a production system</li>
+        <li>Live pilot at a real mandi with ESP32 devices</li>
+        <li>Public internet exposure without removing debug routes and fixing auth</li>
+      </ul>
+    </div>
+  </div>
+  <div class="callout crit" style="margin-top:1rem">
+    <strong>Aligned machine-readable report:</strong> this HTML is generated in lockstep with <code>docs/audit/PROJECT_AUDIT_REPORT.json</code> — same grades, same issue IDs (CI-01, SEC-01, HW-01, DATA-01, AUTH-01, ROUTE-01, SEC-02, DB-02, DEP-01, SEC-03), same phase statuses, same recommendation list.
+  </div>
+</section>
+
+</main>
+<footer>
+  MandiSync Strict Audit · 2026-10-29 · Generated by opencode with Ollama gpt-oss:120b-cloud second opinion · Companion JSON: docs/audit/PROJECT_AUDIT_REPORT.json
+</footer>
+</body>
+</html>

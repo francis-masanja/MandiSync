@@ -9,17 +9,37 @@ import plugin from 'tailwindcss/plugin';
  * Secondary (clay) – warm earth tones with subtle texture and a low‑opacity overlay.
  */
 const config: Config = {
-  content: ['./app/**/*.{js,ts,jsx,tsx}', './components/**/*.{js,ts,jsx,tsx}'],
+  content: ['./src/**/*.{js,ts,jsx,tsx}'],
   darkMode: 'class',
   theme: {
     extend: {
       colors: {
+        // Solid primary used by links and buttons
+        primary: '#10b981',
         // Primary glass palette – teal / emerald with 20% opacity by default
-        primaryGlass: '#10b98133', // emerald-500 @ 20% opacity
-        primaryGlassHover: '#10b98155',
+        'primary-glass': '#10b98133', // emerald-500 @ 20% opacity
+        'primary-glass-hover': '#10b98155',
         // Secondary clay palette – warm brown / sand with 15% opacity
-        secondaryClay: '#c19a6b33', // clay-ish tone @ 20% opacity
-        secondaryClayHover: '#c19a6b55',
+        'secondary-clay': '#c19a6b33', // clay-ish tone @ 20% opacity
+        'secondary-clay-hover': '#c19a6b55',
+        // Pure Clay design tokens (theme-aware CSS variables)
+        clay: {
+          bg: 'var(--clay-bg)',
+          surface: 'var(--clay-surface)',
+          'surface-2': 'var(--clay-surface-2)',
+          'surface-3': 'var(--clay-surface-3)',
+          line: 'var(--clay-line)',
+          text: 'var(--clay-text)',
+          muted: 'var(--clay-muted)',
+          faint: 'var(--clay-faint)',
+          ink: 'var(--clay-ink)',
+          accent: 'var(--clay-accent)',
+          'accent-strong': 'var(--clay-accent-strong)',
+          'accent-soft': 'var(--clay-accent-soft)',
+          wheat: 'var(--clay-wheat)',
+          clay: 'var(--clay-clay)',
+          danger: 'var(--clay-danger)',
+        },
       },
       backdropBlur: {
         xs: '2px',

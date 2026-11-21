@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MandiSync CA2 · Group Study Guides</title>
+  <style>
+
+:root {
+  --bg: #f4f7f5;
+  --card: rgba(255,255,255,.82);
+  --ink: #0f172a;
+  --muted: #5b6b7c;
+  --emerald: #047857;
+  --emerald-soft: #d1fae5;
+  --amber: #b45309;
+  --amber-soft: #fef3c7;
+  --line: #dbe4e0;
+  --shadow: 0 18px 45px rgba(6,78,59,.10);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(900px 500px at 10% -10%, #d1fae5 0%, transparent 60%),
+    radial-gradient(700px 400px at 100% 0%, #fef3c7 0%, transparent 55%),
+    var(--bg);
+  line-height: 1.7;
+}
+.wrap { max-width: 980px; margin: 0 auto; padding: 28px 20px 80px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; color: var(--emerald); }
+.logo { width: 34px; height: 34px; border-radius: 11px; background: linear-gradient(135deg, #10b981, #047857); color: #fff; display: grid; place-items: center; font-size: 18px; }
+.pill { font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 999px; background: var(--emerald-soft); color: var(--emerald); }
+.hero { background: var(--card); border: 1px solid var(--line); border-radius: 26px; padding: 30px; box-shadow: var(--shadow); backdrop-filter: blur(14px); }
+.eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: 12px; font-weight: 800; color: var(--emerald); }
+h1 { font-size: clamp(30px, 5vw, 48px); line-height: 1.1; margin: 10px 0 12px; letter-spacing: -.03em; }
+h2 { font-size: 24px; margin: 34px 0 10px; letter-spacing: -.02em; }
+h3 { font-size: 17px; margin: 22px 0 6px; }
+p { margin: 10px 0; }
+.lead { font-size: 18px; color: var(--muted); }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin-top: 18px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px; box-shadow: 0 8px 24px rgba(6,78,59,.06); }
+.card b { color: var(--emerald); }
+.note { border-left: 4px solid var(--emerald); background: var(--emerald-soft); padding: 14px 16px; border-radius: 12px; margin: 18px 0; }
+.warn { border-left-color: var(--amber); background: var(--amber-soft); }
+ul, ol { padding-left: 22px; }
+li { margin: 7px 0; }
+.terms { display: grid; gap: 10px; }
+.term { display: grid; grid-template-columns: 150px 1fr; gap: 12px; padding: 12px 14px; background: #fff; border: 1px solid var(--line); border-radius: 12px; }
+.term b { color: var(--emerald); }
+table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; background: #fff; border-radius: 12px; overflow: hidden; }
+th { text-align: left; background: #ecfdf5; color: #065f46; padding: 10px; }
+td { padding: 10px; border-top: 1px solid var(--line); vertical-align: top; }
+figure { margin: 20px 0; }
+figure img { width: 100%; border-radius: 14px; border: 1px solid var(--line); background: #fff; }
+figcaption { font-size: 13px; color: var(--muted); margin-top: 6px; text-align: center; }
+.footer { margin-top: 40px; color: var(--muted); font-size: 13px; text-align: center; }
+.nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 0; }
+.nav a { text-decoration: none; color: var(--emerald); background: #fff; border: 1px solid var(--line); padding: 8px 12px; border-radius: 999px; font-size: 13px; font-weight: 700; }
+.nav a:hover { background: var(--emerald-soft); }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 720px) { .two-col { grid-template-columns: 1fr; } .term { grid-template-columns: 1fr; } .hero { padding: 22px; } }
+@media print { body { background: #fff; } .hero, .card { box-shadow: none; } .nav { display: none; } }
+
+.owner { display:flex; align-items:center; gap:12px; margin-top:18px; flex-wrap:wrap; }
+.owner .chip { background:#fff; border:1px solid var(--line); padding:8px 12px; border-radius:999px; font-size:13px; }
+.owner .chip b { color: var(--emerald); }
+.recap { background: linear-gradient(135deg, #ecfdf5, #fef3c7); border:1px solid #a7f3d0; border-radius:18px; padding:18px 20px; margin-top:22px; }
+.recap h3 { margin-top:0; }
+.kicker { font-size:12px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:var(--emerald); }
+.figure-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.figure-grid figure { margin:0; }
+.small { font-size:13px; color:var(--muted); }
+.tag { display:inline-block; font-size:11px; font-weight:700; padding:4px 9px; border-radius:999px; background:var(--emerald-soft); color:var(--emerald); margin:2px 4px 2px 0; }
+.segment-nav { display:flex; flex-wrap:wrap; gap:8px; margin:18px 0 0; }
+.segment-nav a { text-decoration:none; color:var(--emerald); background:#fff; border:1px solid var(--line); padding:7px 11px; border-radius:999px; font-size:12px; font-weight:700; }
+.segment-nav a.active { background:var(--emerald); color:#fff; border-color:var(--emerald); }
+.segment-nav a:hover { background:var(--emerald-soft); }
+.segment-nav a.active:hover { background:var(--emerald); }
+@media (max-width: 720px) { .figure-grid { grid-template-columns:1fr; } }
+
+a { color: var(--emerald); }
+a:hover { color: #065f46; }
+.footer a { color: var(--emerald); }
+
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="topbar">
+      <div class="brand"><div class="logo">MS</div><div>MandiSync</div></div>
+      <div class="pill">CA2 · 5 study guides</div>
+    </header>
+
+    <section class="hero">
+      <div class="eyebrow">CA2 project report · group reading pack</div>
+      <h1>MandiSync, split into five easy parts</h1>
+      <p class="lead">Each guide is short, visual and written in plain language. Read your own part first, then skim the rest so the whole group can answer questions about the project.</p>
+      <div class="owner">
+        <span class="chip"><b>Francis Masanja</b> · Hardware</span>
+        <span class="chip"><b>Minza Aron</b> · Frontend</span>
+        <span class="chip"><b>Amro</b> · Middleware</span>
+        <span class="chip"><b>Omer</b> · Backend</span>
+        <span class="chip"><b>Vikie</b> · Database</span>
+      </div>
+      <nav class="segment-nav">
+        <a class="active" href="index.html">Index</a>
+        <a href="01-big-picture-Amro.html">1. The Big Picture</a>
+        <a href="02-how-we-planned-Francis-Masanja.html">2. How We Planned It</a>
+        <a href="03-how-it-works-Omer.html">3. How It Works</a>
+        <a href="04-what-users-see-Minza-Aron.html">4. What Users See</a>
+        <a href="05-data-team-next-steps-Vikie.html">5. Data, Team &amp; Next Steps</a>
+      </nav>
+    </section>
+
+    <h2>Pick your part</h2>
+    <div class="grid">
+      <article class="card">
+        <div class="kicker">Segment 1 · Amro</div>
+        <h3>The Big Picture</h3>
+        <p class="small">What MandiSync is, the problem it solves, who uses it and why one shared record matters.</p>
+        <p><span class="tag">Middleware &amp; Security</span></p>
+        <p><a href="01-big-picture-Amro.html">Read segment 1 →</a></p>
+      </article>
+
+      <article class="card">
+        <div class="kicker">Segment 2 · Francis Masanja</div>
+        <h3>How We Planned It</h3>
+        <p class="small">The phase plan, the real git milestones, the Gantt chart and the small technology stack.</p>
+        <p><span class="tag">Hardware Integration</span></p>
+        <p><a href="02-how-we-planned-Francis-Masanja.html">Read segment 2 →</a></p>
+      </article>
+
+      <article class="card">
+        <div class="kicker">Segment 3 · Omer</div>
+        <h3>How It Works</h3>
+        <p class="small">Browser to Next.js to Prisma to database, plus the gate and scale nodes calling the API.</p>
+        <p><span class="tag">Backend</span></p>
+        <p><a href="03-how-it-works-Omer.html">Read segment 3 →</a></p>
+      </article>
+
+      <article class="card">
+        <div class="kicker">Segment 4 · Minza Aron</div>
+        <h3>What Users See</h3>
+        <p class="small">The farmer, gate, weighbridge and queue screens, with wireframes beside the current prototype.</p>
+        <p><span class="tag">Frontend</span></p>
+        <p><a href="04-what-users-see-Minza-Aron.html">Read segment 4 →</a></p>
+      </article>
+
+      <article class="card">
+        <div class="kicker">Segment 5 · Vikie</div>
+        <h3>Data, Team and Next Steps</h3>
+        <p class="small">The six database tables, who owns what, what is finished and what still needs work.</p>
+        <p><span class="tag">Database</span></p>
+        <p><a href="05-data-team-next-steps-Vikie.html">Read segment 5 →</a></p>
+      </article>
+    </div>
+
+    <div class="note">
+      <b>Suggested order:</b> read your own segment first, then read segment 1 for the story and segment 3 for the flow. That gives you enough context to answer most questions.
+    </div>
+
+    <h2>Full report</h2>
+    <div class="two-col">
+      <div class="card">
+        <h3>PDF</h3>
+        <p class="small">The filled CA2 report with the cover page, tables, diagrams and both wireframes and actual screenshots.</p>
+        <p><a href="../MandiSync_CA2_Report.pdf">Open the PDF →</a></p>
+      </div>
+      <div class="card">
+        <h3>DOCX</h3>
+        <p class="small">The editable version built from <code>template_ca2.docx</code>.</p>
+        <p><a href="../MandiSync_CA2_Report.docx">Open the DOCX →</a></p>
+      </div>
+    </div>
+
+    <div class="recap">
+      <h3>Baby recap</h3>
+      <p>One project, five parts. Each person owns one technical area and one short guide. Read yours, skim the rest, and you can explain the project without memorising the whole codebase.</p>
+    </div>
+
+    <footer class="footer">
+      MandiSync CA2 · Group study pack · Aug–Dec 2026
+    </footer>
+  </div>
+</body>
+</html>
