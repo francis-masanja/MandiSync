@@ -26,8 +26,6 @@ const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
   });
 };
 
-const isProduction = process.env.NODE_ENV === 'production';
-
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -57,36 +55,10 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60,
   },
-  cookies: {
-    sessionToken: {
-      name: 'next-auth.session-token',
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: isProduction,
-        path: '/',
-        maxAge: 30 * 24 * 60 * 60,
-      },
-    },
-    callbackUrl: {
-      name: 'next-auth.callback-url',
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: isProduction,
-        path: '/',
-      },
-    },
-    csrfToken: {
-      name: 'next-auth.csrf-token',
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: isProduction,
-        path: '/',
-      },
-    },
-  },
+  // Use NextAuth's cookie defaults. On HTTPS NextAuth prefixes the session
+  // cookie with `__Secure-`; getToken() (proxy and API handlers) expects that
+  // prefixed name on Vercel. A custom unprefixed cookie name makes login work
+  // while every protected page and API call redirects as unauthenticated.
   callbacks: {
     async jwt({ token, user }: { token: any; user: any }) {
       if (user) token.role = (user as any).role;
