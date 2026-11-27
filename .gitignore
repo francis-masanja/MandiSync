@@ -14,3 +14,4 @@ __pycache__/
 *.pyc
 prisma/*.db
 prisma/*.db-journal
+.taste-skill

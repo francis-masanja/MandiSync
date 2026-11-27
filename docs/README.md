@@ -7,6 +7,7 @@ Map of the docs folder.
 - `reference/architecture.md` — how the `src/` tree is organized.
 - `reference/api.md` — REST endpoints and request/response shapes.
 - `guides/development-guide-baby.md` — step-by-step developer walkthrough.
+- `guides/VERCEL_DEPLOY.md` — deploy to Vercel (environment variables, demo logins, storage caveats).
 - `plans/PRODUCTION_REBUILD_PLAN.md` — the active roadmap.
 
 ## Folders
@@ -15,7 +16,7 @@ Map of the docs folder.
 | --- | --- |
 | `reference/` | Architecture, API, component, data-model, and flow references. |
 | `design/` | Visual language and the full Mandi app flow design system. |
-| `guides/` | Baby-mode developer guide, secrets handling, Turso auth. |
+| `guides/` | Baby-mode developer guide, secrets handling, Turso auth, Vercel deployment. |
 | `plans/` | Active plan only (`PRODUCTION_REBUILD_PLAN.md`). |
 | `archive/` | Superseded master plan, phases 1–6, TODO checklist, decision log, old plans. |
 | `audit/` | Historical project audit report (HTML + JSON). |

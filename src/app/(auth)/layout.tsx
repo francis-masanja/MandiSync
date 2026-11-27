@@ -3,7 +3,7 @@ import { ThemeToggle } from '@/features/system/ThemeToggle';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <main className="clay-bg relative flex min-h-screen items-center justify-center overflow-hidden p-4 sm:p-6">
+    <main className="clay-bg relative flex min-h-screen items-center justify-center overflow-hidden p-4 pt-20 sm:p-6">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -left-24 top-10 h-64 w-64 rounded-full bg-[var(--clay-accent)] opacity-20 blur-3xl"

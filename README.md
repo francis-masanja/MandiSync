@@ -5,7 +5,7 @@ Agricultural market synchronization system for farmers, mandis, and weighbridge 
 ## Features
 
 - **Role-based workspaces** - one login, one panel: farmers see deliveries, operators see the gate and queue, administrators see the network overview
-- **Farmer Portal** - book slots, view mandi availability, carry a QR pass, manage crop deliveries
+- **Farmer Portal** - self-service farmer signup, slot booking, mandi availability, QR pass, and crop deliveries
 - **Gate Control Desk** - RFID/QR verification, barrier control, weighbridge telemetry
 - **Live Queue Ledger** - real-time booking queue and metrics
 - **Admin overview** - network capacity, bookings, and recent telemetry across every mandi
@@ -48,6 +48,10 @@ docs/                   # Reference, design, guides, plans, archive, CA2
 Demo accounts live in `data/users.json` (seeded by `scripts/seed-users.js`):
 `farmer@example.com`, `operator@example.com`, and `admin@example.com`.
 
+New farmers can register at `/signup`; the account is written to `data/users.json` and
+mirrored to the Prisma `User` table when `DATABASE_URL` is set. Gate operator and
+administrator accounts are not self-service.
+
 Each role lands on its own home: `/farmer`, `/gate`, or `/admin`. Navigation, pages, and API
 routes are filtered by role in `src/proxy.ts`. `/settings` holds the profile, the light/dark clay
 theme, and the diagnostics log viewer (verbose mode captures debug events; warnings and errors are
@@ -57,6 +61,7 @@ always recorded).
 
 | Endpoint | Description |
 |----------|-------------|
+| `POST /api/auth/signup` | Create a farmer account from the public signup page |
 | `GET /api/v1/mandis` | List all mandis with distance |
 | `GET /api/v1/queue/status` | Live queue & metrics |
 | `POST /api/v1/bookings/create` | Create new booking |

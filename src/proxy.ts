@@ -13,6 +13,7 @@ const PUBLIC_PREFIXES = [
   '/api/auth',
   '/favicon.ico',
   '/login',
+  '/signup',
   '/forgot-password',
   '/unauthorized',
 ];

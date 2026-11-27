@@ -153,6 +153,13 @@ export default function LoginPage() {
         </button>
       </form>
 
+      <p className="mt-4 text-center text-xs font-medium text-[var(--clay-muted)]">
+        New to MandiSync?{' '}
+        <Link href="/signup" className="font-bold text-[var(--clay-accent-strong)] hover:underline">
+          Create a farmer account
+        </Link>
+      </p>
+
       <div className="mt-5 flex items-start gap-2 rounded-xl bg-[var(--clay-surface-2)] px-3 py-2.5">
         <ShieldCheck className="mt-0.5 h-4 w-4 flex-none text-[var(--clay-accent-strong)]" />
         <p className="text-[11px] leading-relaxed text-[var(--clay-muted)]">

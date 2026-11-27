@@ -254,7 +254,7 @@ export function FarmerPortal({
                 required
                 value={farmerName}
                 onChange={(e) => setFarmerName(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500"
                 placeholder="e.g. Rameshwar Singh Patel"
               />
             </div>
@@ -269,7 +269,7 @@ export function FarmerPortal({
                 required
                 value={farmerPhone}
                 onChange={(e) => setFarmerPhone(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500"
                 placeholder="+91 98XXX XXXXX"
               />
             </div>

@@ -43,7 +43,7 @@ const authOptions: NextAuthOptions = {
         if (!credentials) return null;
         const { email, password } = credentials;
         // Find user
-        const user = findUserByEmail(email);
+        const user = await findUserByEmail(email);
         if (!user) return null;
         // Verify password with timeout protection
         const isValid = await withTimeout(bcrypt.compare(password, user.passwordHash), 10000);
