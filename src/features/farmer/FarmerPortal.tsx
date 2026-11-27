@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { QrCodeCard } from './QrCodeCard';
 import type { Mandi, Booking } from '@/shared/types';
 import { calculateHaversineDistance } from '@/shared/spatial';
@@ -17,7 +17,7 @@ import {
   RefreshCw,
   Printer,
   FileCheck,
-  HardDrive
+  QrCode
 } from 'lucide-react';
 
 interface FarmerPortalProps {
@@ -61,6 +61,7 @@ export function FarmerPortal({
   onBookingCreated,
   onRefreshData,
 }: FarmerPortalProps) {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5>(1);
 
   // Form State
@@ -89,6 +90,7 @@ export function FarmerPortal({
     : 12.4;
 
   const selectedCrop = CROP_OPTIONS.find((c) => c.name === cropType) || CROP_OPTIONS[0];
+  const selectedPass = bookingSuccess ?? activeBookings[0] ?? null;
 
   const handleUseDeviceGps = () => {
     if (!navigator.geolocation) {
@@ -155,6 +157,7 @@ export function FarmerPortal({
       onBookingCreated?.(data.booking);
       onRefreshData?.();
       setCurrentStep(4);
+      router.refresh();
     } catch (err: any) {
       setErrorMessage(err.message || 'An unexpected error occurred during slot booking.');
     } finally {
@@ -179,7 +182,10 @@ export function FarmerPortal({
           {activeBookings.length > 0 && (
             <button
               type="button"
-              onClick={() => setCurrentStep(4)}
+              onClick={() => {
+                if (bookingSuccess) setBookingSuccess(null);
+                setCurrentStep(4);
+              }}
               className="text-xs px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg flex items-center gap-1.5 font-medium transition-colors cursor-pointer"
             >
               <ShieldCheck className="w-3.5 h-3.5" />
@@ -214,6 +220,99 @@ export function FarmerPortal({
             </button>
           ))}
         </div>
+      </div>
+
+      {/* MY BOOKINGS: server-fed list, always visible */}
+      <div className="bg-glass border-glass rounded-glassy shadow-glass p-4 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <QrCode className="w-4 h-4 text-emerald-600" />
+              My bookings
+              <span className="text-[10px] font-mono font-bold text-slate-500">
+                {activeBookings.length}
+              </span>
+            </h3>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              Every pass is signed. Show the QR at the gate; the gate scans it to verify the booking.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => router.refresh()}
+            className="text-[11px] font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1.5 self-start sm:self-auto"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Refresh
+          </button>
+        </div>
+
+        {activeBookings.length === 0 ? (
+          <div className="rounded-xl bg-secondary-clay border border-slate-200 p-3 text-xs text-slate-600">
+            No bookings yet. Reserve a slot on Screen 3, then your pass appears here.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+            {activeBookings.map((booking) => {
+              const mandiName = booking.mandi?.name || booking.mandiName || 'Mandi';
+              const slot = booking.slotWindow
+                || (booking.slot?.windowStart && booking.slot?.windowEnd
+                  ? `${booking.slot.windowStart} - ${booking.slot.windowEnd}`
+                  : 'Slot pending');
+              const statusTone =
+                booking.status === 'COMPLETED'
+                  ? 'bg-emerald-100 text-emerald-800'
+                  : booking.status === 'WEIGHED_GROSS'
+                    ? 'bg-amber-100 text-amber-800'
+                    : booking.status === 'GATE_VERIFIED'
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'bg-slate-100 text-slate-700';
+              return (
+                <div key={booking.id} className="rounded-xl border border-slate-200 bg-white p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono text-xs font-bold text-slate-800">{booking.id}</span>
+                    <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${statusTone}`}>
+                      {booking.status}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+                    <span className="text-slate-500">Mandi</span>
+                    <span className="font-semibold text-slate-800 text-right truncate">{mandiName}</span>
+                    <span className="text-slate-500">Slot</span>
+                    <span className="font-mono text-slate-800 text-right">{slot}</span>
+                    <span className="text-slate-500">Crop</span>
+                    <span className="font-medium text-slate-800 text-right truncate">{booking.cropType}</span>
+                    <span className="text-slate-500">Estimated</span>
+                    <span className="font-mono text-slate-800 text-right">{booking.estimatedKg.toLocaleString()} kg</span>
+                    {booking.actualNetKg ? (
+                      <>
+                        <span className="text-slate-500">Net weight</span>
+                        <span className="font-mono font-bold text-emerald-700 text-right">{booking.actualNetKg.toLocaleString()} kg</span>
+                      </>
+                    ) : null}
+                    {booking.totalPayoutInr ? (
+                      <>
+                        <span className="text-slate-500">Payout</span>
+                        <span className="font-mono font-bold text-emerald-700 text-right">₹{booking.totalPayoutInr.toLocaleString()}</span>
+                      </>
+                    ) : null}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBookingSuccess(booking);
+                      setCurrentStep(4);
+                    }}
+                    className="w-full rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold py-1.5 flex items-center justify-center gap-1.5 transition-colors"
+                  >
+                    <QrCode className="w-3.5 h-3.5" />
+                    View QR gate pass
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* SCREEN 1: Home / Geolocation Check */}
@@ -609,82 +708,104 @@ export function FarmerPortal({
       {/* SCREEN 4: Digital Pass Issued */}
       {currentStep === 4 && (
         <div className="bg-glass border-glass rounded-glassy p-5 shadow-glass space-y-5">
-          <div className="border-b border-slate-100 pb-3 flex items-start justify-between">
+          <div className="border-b border-slate-100 pb-3 flex items-start justify-between gap-3">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                 Screen 4 • Digital Pass Issued
               </span>
               <h3 className="text-base font-bold text-slate-900 mt-1">
-                Offline IndexedDB Cached Cryptographic Gate Pass
+                Signed QR gate pass
               </h3>
               <p className="text-xs text-slate-500">
-                SHA-256 HMAC encrypted token verifiable without internet. Shows countdown timer and target wait time under 45 minutes.
+                The gate scans this QR. MandiSync verifies the signature and the booking before the barrier opens.
               </p>
             </div>
 
-<Link
-                href={`/pass/print?bookingId=${bookingSuccess?.id || activeBookings[0]?.id || 'BK-2026-001'}&rfid=${bookingSuccess?.rfidTag || rfidTag}&slot=${encodeURIComponent(selectedSlotTime)}&mandi=${encodeURIComponent(selectedMandi?.name || '')}`}
-                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
-              >
-                <Printer className="w-3.5 h-3.5" />
-                Print Digital Pass
-              </Link>
+            <button
+              type="button"
+              onClick={() => window.print()}
+              disabled={!selectedPass}
+              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              Print pass
+            </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-12 gap-5 items-center">
-            <div className="sm:col-span-5 flex justify-center">
-              <QrCodeCard
-                data={JSON.stringify({
-                  booking_id: bookingSuccess?.id || activeBookings[0]?.id || 'BK-2026-001',
-                  hmac: bookingSuccess?.hmacToken || activeBookings[0]?.hmacToken || '9e7b29a6e1f0e4b7c8a1132049e7b29a',
-                  rfid: rfidTag,
-                  slot: selectedSlotTime,
-                })}
-                title="Gate UHF & QR Pass"
-                size={160}
-              />
+          {selectedPass ? (
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-5 items-center">
+              <div className="sm:col-span-5 flex flex-col items-center gap-2">
+                {selectedPass.hmacToken ? (
+                  <QrCodeCard
+                    data={selectedPass.hmacToken}
+                    title="Gate QR pass"
+                    size={170}
+                  />
+                ) : (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900 text-center">
+                    This booking has no signed QR token yet. Refresh the page.
+                  </div>
+                )}
+                <p className="text-[10px] text-slate-500 text-center">
+                  The gate scans the QR; no typing is needed.
+                </p>
+              </div>
+
+              <div className="sm:col-span-7 bg-secondary-clay p-4 rounded-xl border border-slate-200 space-y-2.5 text-xs">
+                <div className="flex justify-between items-center pb-2 border-b border-slate-200">
+                  <span className="text-slate-500 font-medium">Digital Pass ID:</span>
+                  <span className="font-mono font-bold text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200">
+                    {selectedPass.id}
+                  </span>
+                </div>
+
+                <div className="flex justify-between py-1 border-b border-slate-100">
+                  <span className="text-slate-500">Vehicle UHF RFID Tag:</span>
+                  <span className="font-mono font-bold text-emerald-700 bg-white px-1.5 py-0.5 rounded border border-emerald-200">
+                    {selectedPass.rfidTag}
+                  </span>
+                </div>
+
+                <div className="flex justify-between py-1 border-b border-slate-100">
+                  <span className="text-slate-500">Scheduled Arrival Window:</span>
+                  <span className="font-bold text-slate-800">
+                    {selectedPass.slotWindow
+                      || (selectedPass.slot?.windowStart && selectedPass.slot?.windowEnd
+                        ? `${selectedPass.slot.windowStart} - ${selectedPass.slot.windowEnd}`
+                        : 'Slot pending')}
+                  </span>
+                </div>
+
+                <div className="flex justify-between py-1 border-b border-slate-100">
+                  <span className="text-slate-500">Gate status:</span>
+                  <span className="font-bold text-slate-800">{selectedPass.status}</span>
+                </div>
+
+                <div className="flex justify-between py-1 border-b border-slate-100">
+                  <span className="text-slate-500">Mandi Destination:</span>
+                  <span className="font-medium text-slate-800">
+                    {selectedPass.mandi?.name || selectedPass.mandiName || selectedMandi?.name}
+                  </span>
+                </div>
+
+                <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg text-[11px] text-emerald-900 flex items-start gap-2 mt-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span>
+                    <strong>Signed pass:</strong> The QR contains a signed booking token. The gate verifies it
+                    against this booking before the barrier opens.
+                  </span>
+                </div>
+              </div>
             </div>
-
-            <div className="sm:col-span-7 bg-secondary-clay p-4 rounded-xl border border-slate-200 space-y-2.5 text-xs">
-              <div className="flex justify-between items-center pb-2 border-b border-slate-200">
-                <span className="text-slate-500 font-medium">Digital Pass ID:</span>
-                <span className="font-mono font-bold text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200">
-                  {bookingSuccess?.id || activeBookings[0]?.id || 'BK-2026-001'}
-                </span>
-              </div>
-
-              <div className="flex justify-between py-1 border-b border-slate-100">
-                <span className="text-slate-500">Vehicle UHF RFID Tag:</span>
-                <span className="font-mono font-bold text-emerald-700 bg-white px-1.5 py-0.5 rounded border border-emerald-200">
-                  {bookingSuccess?.rfidTag || rfidTag}
-                </span>
-              </div>
-
-<div className="flex justify-between py-1 border-b border-slate-100">
-              <span className="text-slate-500">Scheduled Arrival Window:</span>
-              <span className="font-bold text-slate-800">{bookingSuccess?.slot?.windowStart && bookingSuccess.slot.windowEnd ? `${bookingSuccess.slot.windowStart} - ${bookingSuccess.slot.windowEnd}` : selectedSlotTime}</span>
+          ) : (
+            <div className="rounded-xl border border-slate-200 bg-secondary-clay p-6 text-center">
+              <QrCode className="w-8 h-8 text-slate-400 mx-auto" />
+              <p className="mt-2 text-sm font-semibold text-slate-700">No pass selected</p>
+              <p className="mt-1 text-xs text-slate-500">
+                Book a slot, or choose one of your bookings above to open its QR pass.
+              </p>
             </div>
-
-              <div className="flex justify-between py-1 border-b border-slate-100">
-                <span className="text-slate-500">Guaranteed Queue Turnaround:</span>
-                <span className="font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
-                  &lt; 45 mins wait time
-                </span>
-              </div>
-
-              <div className="flex justify-between py-1 border-b border-slate-100">
-                <span className="text-slate-500">Mandi Destination:</span>
-                <span className="font-medium text-slate-800">{selectedMandi?.name}</span>
-              </div>
-
-              <div className="p-2.5 bg-blue-50 border border-blue-200 rounded-lg text-[11px] text-blue-800 flex items-center gap-2 mt-2">
-                <HardDrive className="w-4 h-4 text-blue-600 shrink-0" />
-                <span>
-                  <strong>Offline Cached:</strong> This pass is saved in phone memory and will scan at the Mandi gate even with zero cellular signal.
-                </span>
-              </div>
-            </div>
-          </div>
+          )}
 
           <div className="flex justify-between pt-2">
             <button

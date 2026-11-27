@@ -1,9 +1,15 @@
 import { z } from 'zod';
 
-export const GateVerifySchema = z.object({
-  rfid_tag: z.string().min(1, 'RFID tag is required'),
-  device_id: z.string().min(1, 'Device ID is required'),
-});
+export const GateVerifySchema = z
+  .object({
+    rfid_tag: z.string().min(1, 'RFID tag is required').optional(),
+    qr_token: z.string().min(1, 'QR token is required').optional(),
+    device_id: z.string().min(1, 'Device ID is required'),
+  })
+  .refine((value) => Boolean(value.rfid_tag || value.qr_token), {
+    message: 'Provide an RFID tag or a QR pass',
+    path: ['rfid_tag'],
+  });
 
 export const WeighbridgeSchema = z.object({
   booking_id: z.string().min(1, 'Booking ID is required').optional(),

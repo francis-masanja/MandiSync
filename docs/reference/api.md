@@ -11,7 +11,7 @@ with an insufficient role receive `403 {"error":"Forbidden"}`.
 | **GET** | `/api/v1/queue/status` | Bookings, telemetry logs, mandis, and aggregate metrics. Optional `mandiId` filter. |
 | **GET** | `/api/v1/mandis` | List mandis with optional distance. Query: `farmer_lat`, `farmer_lon`, `limit`, `offset`. |
 | **POST** | `/api/v1/bookings/create` | Create a booking. Requires the `farmer` role. |
-| **POST** | `/api/v1/telemetry/gate-verify` | Verify an RFID tag at the gate. |
+| **POST** | `/api/v1/telemetry/gate-verify` | Verify an RFID tag or a signed QR gate pass. |
 | **POST** | `/api/v1/telemetry/weighbridge` | Record a gross or tare weighbridge measurement. |
 | **POST** | `/api/v1/telemetry/batch-sync` | Flush buffered LittleFS telemetry packets. |
 
@@ -44,6 +44,19 @@ with an insufficient role receive `403 {"error":"Forbidden"}`.
   "device_id": "ESP32-GATE-NODE-01"
 }
 ```
+
+The gate desk can send a signed QR pass instead of an RFID tag:
+
+```json
+{
+  "qr_token": "MANDISYNC1.<payload>.<signature>",
+  "device_id": "ESP32-GATE-DESK-01"
+}
+```
+
+The token is generated when a booking is created and is verified server-side
+against the booking id, farmer id and slot id. A confirmed pass changes the
+booking to `GATE_VERIFIED`; a replayed or tampered pass is rejected.
 
 ### `POST /api/v1/telemetry/weighbridge`
 

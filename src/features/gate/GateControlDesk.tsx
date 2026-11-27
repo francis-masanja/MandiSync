@@ -1,14 +1,19 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Booking, TelemetryLog } from '@/shared/types';
+import { QrScanner } from './QrScanner';
 import { hardwareAudio } from '@/shared/audio';
 import {
   Radio,
   CheckCircle2,
   XCircle,
   RotateCw,
-  Terminal
+  Terminal,
+  QrCode,
+  Camera,
+  ListChecks
 } from 'lucide-react';
 
 interface GateControlDeskProps {
@@ -18,13 +23,16 @@ interface GateControlDeskProps {
 }
 
 export function GateControlDesk({ bookings = [], logs = [], onRefreshData }: GateControlDeskProps) {
+  const router = useRouter();
   const [rfidInput, setRfidInput] = useState('UHF-TAG-891024');
+  const [qrInput, setQrInput] = useState('');
+  const [scannerOpen, setScannerOpen] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [gateStatus, setGateStatus] = useState<'IDLE' | 'OPEN' | 'DENIED'>('IDLE');
   const [gateAngle, setGateAngle] = useState(0);
   const [verifyResult, setVerifyResult] = useState<any>(null);
 
-  const handleSimulateScan = async (tagToScan: string) => {
+  const verify = async (payload: { rfid_tag?: string; qr_token?: string }) => {
     setIsVerifying(true);
     setVerifyResult(null);
 
@@ -33,7 +41,7 @@ export function GateControlDesk({ bookings = [], logs = [], onRefreshData }: Gat
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          rfid_tag: tagToScan,
+          ...payload,
           device_id: 'ESP32-GATE-DESK-01',
         }),
       });
@@ -60,13 +68,27 @@ export function GateControlDesk({ bookings = [], logs = [], onRefreshData }: Gat
       }
 
       onRefreshData?.();
+      router.refresh();
     } catch (err) {
       console.error(err);
       hardwareAudio.playBuzzerError();
       setGateStatus('DENIED');
+      setVerifyResult({ gate_open: false, message: 'Gate verification failed. Check the connection and retry.' });
     } finally {
       setIsVerifying(false);
     }
+  };
+
+  const handleSimulateScan = (tagToScan: string) => {
+    if (!tagToScan.trim()) return;
+    void verify({ rfid_tag: tagToScan.trim() });
+  };
+
+  const handleVerifyQr = (token: string) => {
+    const value = token.trim();
+    if (!value) return;
+    setQrInput(value);
+    void verify({ qr_token: value });
   };
 
   const gateLogs = logs.filter(
@@ -233,6 +255,144 @@ export function GateControlDesk({ bookings = [], logs = [], onRefreshData }: Gat
               )}
             </div>
           )}
+        </div>
+
+        <div className="bg-glass border-glass rounded-glassy shadow-glassy p-4 space-y-3">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <QrCode className="w-4 h-4 text-emerald-600" />
+              QR gate pass
+            </h3>
+            <span className="text-[10px] font-mono text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+              SIGNED PASS
+            </span>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="text"
+              value={qrInput}
+              onChange={(event) => setQrInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') handleVerifyQr(qrInput);
+              }}
+              placeholder="Scan the QR, or paste the pass token"
+              className="w-full px-3 py-2 text-xs font-mono bg-white border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500"
+              aria-label="QR pass token"
+            />
+            <button
+              type="button"
+              onClick={() => handleVerifyQr(qrInput)}
+              disabled={isVerifying || !qrInput.trim()}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow-2xs transition-colors flex items-center justify-center gap-1.5 shrink-0 disabled:opacity-50"
+            >
+              {isVerifying ? <RotateCw className="w-3.5 h-3.5 animate-spin" /> : <QrCode className="w-3.5 h-3.5" />}
+              Verify QR
+            </button>
+            <button
+              type="button"
+              onClick={() => setScannerOpen((open) => !open)}
+              className="px-3 py-2 border border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold text-xs rounded-lg transition-colors flex items-center justify-center gap-1.5 shrink-0"
+            >
+              <Camera className="w-3.5 h-3.5" />
+              {scannerOpen ? 'Close camera' : 'Scan with camera'}
+            </button>
+          </div>
+
+          {scannerOpen && (
+            <QrScanner
+              onToken={(token) => {
+                setScannerOpen(false);
+                handleVerifyQr(token);
+              }}
+              onClose={() => setScannerOpen(false)}
+            />
+          )}
+
+          <p className="text-[11px] text-slate-500">
+            The gate reads the signed QR from the farmer&apos;s phone. A USB barcode scanner can type into
+            the field and press Enter. The barrier opens only for a valid, confirmed pass.
+          </p>
+        </div>
+
+        <div className="bg-glass border-glass rounded-glassy shadow-glassy p-4 space-y-3">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <ListChecks className="w-4 h-4 text-emerald-600" />
+              Issued passes
+              <span className="text-[10px] font-mono font-bold text-slate-500">{bookings.length}</span>
+            </h3>
+            <button
+              type="button"
+              onClick={() => router.refresh()}
+              className="text-[10px] font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1"
+            >
+              <RotateCw className="w-3 h-3" />
+              Refresh
+            </button>
+          </div>
+
+          {bookings.length === 0 ? (
+            <p className="rounded-xl bg-secondary-clay border border-slate-200 p-3 text-xs text-slate-600">
+              No passes issued yet. A farmer booking appears here with its QR review action.
+            </p>
+          ) : (
+            <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
+              {bookings.map((booking) => {
+                const mandiName = booking.mandi?.name || booking.mandiName || 'Mandi';
+                const slot = booking.slotWindow
+                  || (booking.slot?.windowStart && booking.slot?.windowEnd
+                    ? `${booking.slot.windowStart} - ${booking.slot.windowEnd}`
+                    : 'Slot pending');
+                const statusTone =
+                  booking.status === 'COMPLETED'
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : booking.status === 'WEIGHED_GROSS'
+                      ? 'bg-amber-100 text-amber-800'
+                      : booking.status === 'GATE_VERIFIED'
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-slate-100 text-slate-700';
+                const canVerify = booking.status === 'CONFIRMED' && Boolean(booking.hmacToken);
+                return (
+                  <div key={booking.id} className="rounded-xl border border-slate-200 bg-white p-2.5 space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-mono text-[11px] font-bold text-slate-800">{booking.id}</span>
+                      <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${statusTone}`}>
+                        {booking.status}
+                      </span>
+                    </div>
+                    <p className="text-[11px] font-semibold text-slate-800 truncate">
+                      {booking.farmerName} · {mandiName}
+                    </p>
+                    <p className="font-mono text-[10px] text-slate-500 truncate">
+                      {booking.rfidTag} · {slot}
+                    </p>
+                    <div className="flex gap-1.5 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => booking.hmacToken && handleVerifyQr(booking.hmacToken)}
+                        disabled={!canVerify || isVerifying}
+                        className="flex-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold py-1.5 disabled:opacity-45"
+                      >
+                        Verify QR
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSimulateScan(booking.rfidTag)}
+                        disabled={booking.status !== 'CONFIRMED' || isVerifying}
+                        className="rounded-md border border-slate-300 hover:bg-slate-100 text-slate-700 text-[10px] font-bold px-2 py-1.5 disabled:opacity-45"
+                      >
+                        RFID
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <p className="text-[10px] text-slate-500">
+            The list is a review aid. The QR scan or the RFID tag still goes through the same signed gate check.
+          </p>
         </div>
       </div>
 

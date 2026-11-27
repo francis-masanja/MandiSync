@@ -1,6 +1,7 @@
 import { Mandi, Slot, Booking, TelemetryLog } from '@/shared/types';
 import { calculateHaversineDistance } from '@/shared/spatial';
 import prisma from '@/server/prisma';
+import { signGatePass } from '@/server/auth/pass';
 
 // ------------------------------------------------------
 // 1. Type Definitions
@@ -157,11 +158,18 @@ class InMemoryDb {
   async getBookings(): Promise<Booking[]> {
     return this.bookings
       .slice()
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .map((booking) => ({
+        ...booking,
+        hmacToken: booking.hmacToken || signGatePass(booking),
+      }));
   }
 
   async getBookingById(id: string): Promise<Booking | undefined> {
-    return this.bookings.find((b) => b.id === id);
+    const booking = this.bookings.find((b) => b.id === id);
+    return booking
+      ? { ...booking, hmacToken: booking.hmacToken || signGatePass(booking) }
+      : undefined;
   }
 
   async resetDemoData(): Promise<boolean> {
@@ -217,6 +225,7 @@ class InMemoryDb {
       distanceKm: dist,
       createdAt: now,
     };
+    newBooking.hmacToken = signGatePass(newBooking);
     this.bookings.unshift(newBooking);
     mandi.allocatedTodayKg += data.estimatedKg;
     mandi.activeQueueCount += 1;
@@ -226,6 +235,17 @@ class InMemoryDb {
   verifyGateEntry(rfidTag: string) {
     const booking = this.bookings.find((b) => b.rfidTag === rfidTag && b.status === 'CONFIRMED');
     if (!booking) return { success: false, message: 'No active booking' };
+    booking.status = 'GATE_VERIFIED';
+    booking.gateEntryAt = new Date();
+    return { success: true, booking };
+  }
+
+  verifyGateEntryById(id: string) {
+    const booking = this.bookings.find((b) => b.id === id);
+    if (!booking) return { success: false, message: 'Gate pass not found' };
+    if (booking.status !== 'CONFIRMED') {
+      return { success: false, message: `Gate pass is ${booking.status.toLowerCase().replace('_', ' ')}` };
+    }
     booking.status = 'GATE_VERIFIED';
     booking.gateEntryAt = new Date();
     return { success: true, booking };
@@ -347,7 +367,18 @@ const prismaDb = {
             booking.mandi.longitude
           )
         : undefined;
-      return { ...booking, slot, distanceKm } as unknown as Booking;
+      return {
+        ...booking,
+        slot,
+        distanceKm,
+        hmacToken:
+          booking.hmacToken ||
+          signGatePass({
+            id: booking.id,
+            farmerId: booking.farmerId,
+            slotId: booking.slotId,
+          }),
+      } as unknown as Booking;
     });
   },
   async getBookingById(id: string): Promise<Booking | null> {
@@ -388,8 +419,15 @@ const prismaDb = {
       } as any,
     });
 
+    const hmacToken = signGatePass({
+      id: created.id,
+      farmerId: data.farmerId as string,
+      slotId,
+    });
+
     await Promise.all([
       prisma.slot.update({ where: { id: slotId }, data: { isBooked: true } }),
+      prisma.booking.update({ where: { id: created.id }, data: { hmacToken } }),
       prisma.mandi.update({
         where: { id: data.mandiId },
         data: {
@@ -399,11 +437,26 @@ const prismaDb = {
       }),
     ]);
 
-    return created as unknown as Booking;
+    return { ...created, hmacToken } as unknown as Booking;
   },
   async verifyGateEntry(rfidTag: string): Promise<{ success: boolean; message?: string; booking?: Booking }> {
     const booking = await prisma.booking.findFirst({ where: { rfidTag, status: 'CONFIRMED' } });
     if (!booking) return { success: false, message: 'No active booking' };
+    const updated = await prisma.booking.update({
+      where: { id: booking.id },
+      data: { status: 'GATE_VERIFIED', gateEntryAt: new Date().toISOString() },
+    });
+    return { success: true, booking: updated as unknown as Booking };
+  },
+  async verifyGateEntryById(id: string): Promise<{ success: boolean; message?: string; booking?: Booking }> {
+    const booking = await prisma.booking.findUnique({ where: { id } });
+    if (!booking) return { success: false, message: 'Gate pass not found' };
+    if (booking.status !== 'CONFIRMED') {
+      return {
+        success: false,
+        message: `Gate pass is ${booking.status.toLowerCase().replace('_', ' ')}`,
+      };
+    }
     const updated = await prisma.booking.update({
       where: { id: booking.id },
       data: { status: 'GATE_VERIFIED', gateEntryAt: new Date().toISOString() },
@@ -468,6 +521,9 @@ const prismaDb = {
 // 3. Exported singleton – Prisma when DATABASE_URL exists, otherwise in-memory
 // ------------------------------------------------------
 const usePrisma = !!process.env.DATABASE_URL;
-const dbInstance = usePrisma ? prismaDb : new InMemoryDb();
+const globalForDb = globalThis as unknown as { __mandisyncInMemoryDb?: InMemoryDb };
+const dbInstance = usePrisma
+  ? prismaDb
+  : (globalForDb.__mandisyncInMemoryDb ??= new InMemoryDb());
 
 export const db = dbInstance;

@@ -26,6 +26,7 @@ Preview):
 | `DATABASE_URL` | leave unset or empty | No |
 | `TURSO_AUTH_TOKEN` | leave unset or empty | No |
 | `NEXT_PUBLIC_SITE_URL` | `https://<your-project>.vercel.app` | Optional (social metadata) |
+| `MANDI_HMAC_SECRET` | a long random string | Optional; falls back to `NEXTAUTH_SECRET` for QR gate passes |
 
 `NEXTAUTH_URL` must be the exact public URL, including `https://`. After the
 first deploy, update it if Vercel assigns a different domain.
@@ -42,6 +43,8 @@ The demo accounts are bundled from `data/users.json`:
 | Farmer | `farmer@example.com` | `farmer123` |
 | Operator | `operator@example.com` | `operator123` |
 | Admin | `admin@example.com` | `admin123` |
+
+The QR gate scanner uses the browser camera, so open the deployed site over HTTPS (Vercel provides it).
 
 ## What works without a database
 

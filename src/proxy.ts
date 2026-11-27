@@ -45,6 +45,7 @@ const SECURITY_HEADERS: Record<string, string> = {
     "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Next.js requires unsafe-inline/eval for dev
     "style-src 'self' 'unsafe-inline'", // Tailwind uses inline styles
     "img-src 'self' data: blob:",
+    "media-src 'self' blob:",
     "font-src 'self' data:",
     "connect-src 'self' http://localhost:11434", // Ollama API
     "frame-ancestors 'none'",
@@ -55,7 +56,7 @@ const SECURITY_HEADERS: Record<string, string> = {
   'X-Frame-Options': 'DENY',
   'X-XSS-Protection': '1; mode=block',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
-  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+  'Permissions-Policy': 'camera=(self), microphone=(), geolocation=(self)',
 };
 
 function addSecurityHeaders(response: NextResponse): NextResponse {
