@@ -51,29 +51,37 @@ The demo accounts are bundled from `data/users.json`:
   a serverless instance**. Vercel may spin up several instances and recycle
   them, so data is not durable and different users may see different state.
 
-Sign-up returns **503** on Vercel because the filesystem is read-only. This is
-expected. Sign-up works locally, where `data/users.json` is writable.
+The auth store file is included in the serverless functions through
+`outputFileTracingIncludes` in `next.config.ts`. The farmer, gate and queue
+pages are `force-dynamic`, so they are not baked at build time.
+
+Sign-up returns **503** without a database because the filesystem is read-only.
+Sign-up works locally, where `data/users.json` is writable; on Vercel it works
+once Turso is configured (below).
 
 ## Optional: persistent storage with Turso
 
-Only do this if you need data to survive cold starts and be shared across
-instances.
+Do this if you need sign-up, login and bookings to survive cold starts and be
+shared across instances.
 
 1. Create a Turso database and copy its `libsql://` URL and auth token.
-2. Apply the schema:
+2. Apply the schema with the libSQL migration runner. The Prisma CLI does not accept `libsql://` URLs; `db:migrate` uses `@libsql/client` instead:
    ```bash
-   DATABASE_URL="libsql://..." TURSO_AUTH_TOKEN="..." npx prisma migrate deploy
+   DATABASE_URL="libsql://..." TURSO_AUTH_TOKEN="..." npm run db:migrate
    ```
-3. Seed the demo users:
+3. Seed the demo users and mandis:
    ```bash
-   DATABASE_URL="libsql://..." TURSO_AUTH_TOKEN="..." npx tsx scripts/seed-turso.ts
+   DATABASE_URL="libsql://..." TURSO_AUTH_TOKEN="..." npm run db:seed
    ```
 4. Add `DATABASE_URL` and `TURSO_AUTH_TOKEN` to Vercel and redeploy.
 
-Caveat: the Prisma path expects `Mandi` and `Slot` rows to exist. Only users
-are seeded by the current scripts, so run the in-memory mode for a demo until
-mandi/slot seeding is added. Login reads `data/users.json` first and falls back
-to the database.
+The migration runner records applied migrations in `_mandisync_migrations`. It refuses to run the destructive init migration against a database that already has MandiSync tables but no migration record, so a previously used database is not wiped by accident.
+
+Slots are created on demand by the first booking for a mandi/day, so there is
+no separate slot seed. Login reads `data/users.json` first and falls back to
+the database; sign-up writes to the database when the filesystem is read-only.
+The Prisma adapter is externalized in `next.config.ts`, and
+`postinstall` generates the client on every fresh Vercel install.
 
 ## Troubleshooting
 
@@ -83,4 +91,5 @@ to the database.
 | Everyone is logged out after a deploy | `NEXTAUTH_SECRET` is missing or changed. |
 | Callback/session errors after login | `NEXTAUTH_URL` does not match the deployed URL. |
 | `PrismaClientInitializationError` | `DATABASE_URL` is set but empty/invalid, or migrations were not applied. Leave it unset for demo mode. |
-| Sign-up returns 503 | Expected on Vercel's read-only filesystem. |
+| Sign-up returns 503 | No writable store: add `DATABASE_URL`/`TURSO_AUTH_TOKEN` (Turso) or run locally. |
+| `db:migrate` or `db:seed` times out with `fetch failed` | Some networks prefer IPv6 and drop it. Retry with `NODE_OPTIONS=--dns-result-order=ipv4first npm run db:migrate` (same for `db:seed`). |

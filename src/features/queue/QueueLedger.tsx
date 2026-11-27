@@ -46,8 +46,12 @@ export default function QueueLedger({ bookings = [] }: Props) {
               </tr>
             ) : (
               bookings.map((b) => {
-                const mandiName = b.mandi?.name || 'Unknown Mandi';
-                const slotWindow = b.slot ? `${b.slot.windowStart} - ${b.slot.windowEnd}` : 'No slot';
+                const mandiName = b.mandi?.name || b.mandiName || 'Unknown Mandi';
+                const slotWindow =
+                  b.slotWindow ||
+                  (b.slot?.windowStart && b.slot?.windowEnd
+                    ? `${b.slot.windowStart} - ${b.slot.windowEnd}`
+                    : 'No slot');
                 return (
                   <tr key={b.id} className="hover:bg-secondary-clay/80 transition-colors">
                     <td className="p-3 font-mono font-bold text-slate-800">{b.id}</td>

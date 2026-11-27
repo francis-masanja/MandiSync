@@ -18,12 +18,25 @@ Agricultural market synchronization system for farmers, mandis, and weighbridge 
 **Prerequisites:** Node.js 20+
 
 ```bash
-npm install        # install dependencies
+cp .env.example .env   # set NEXTAUTH_SECRET and NEXTAUTH_URL
+npm install        # install dependencies (generates the Prisma client)
 npm run dev        # run development server
 npm run type-check # TypeScript
 npm run lint       # ESLint
 npm run build      # production build
 ```
+
+Without `DATABASE_URL` the app uses the in-memory demo dataset and the demo
+accounts in `data/users.json`. With a Turso/libSQL database:
+
+```bash
+DATABASE_URL="libsql://..." TURSO_AUTH_TOKEN="..." npm run db:migrate
+DATABASE_URL="libsql://..." TURSO_AUTH_TOKEN="..." npm run db:seed
+```
+
+`db:migrate` uses the libSQL client because the Prisma CLI does not accept
+`libsql://` URLs. `GET /api/health` reports whether the app is in memory or
+database mode.
 
 ## Project Structure
 

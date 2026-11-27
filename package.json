@@ -20,6 +20,8 @@
     "type-check": "tsc --noEmit",
     "prepare": "npm run lint",
     "postinstall": "prisma generate",
+    "db:migrate": "tsx scripts/migrate-turso.ts",
+    "db:seed": "tsx scripts/seed-turso.ts",
     "rotate:turso-token": "tsx scripts/rotate-turso-token.ts",
     "secrets:scan": "gitleaks detect --source . --verbose"
   },

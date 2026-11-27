@@ -11,6 +11,7 @@ const PUBLIC_PATHS = new Set(['/']);
 const PUBLIC_PREFIXES = [
   '/_next',
   '/api/auth',
+  '/api/health',
   '/favicon.ico',
   '/login',
   '/signup',

@@ -97,10 +97,10 @@ const INITIAL_MANDIS: Mandi[] = [
 const INITIAL_BOOKINGS: Booking[] = [
   {
     id: 'BK-2026-001',
-    farmerId: 'FARM-8821',
-    farmerName: 'Harpreet Singh Sandhu',
-    farmerPhone: '+91 98140 12345',
-    farmerVillage: 'Taraori Farm Cluster',
+    farmerId: 'U1',
+    farmerName: 'Farmer Demo',
+    farmerPhone: '+91 90000 00000',
+    farmerVillage: 'Nilokheri, Karnal',
     mandiId: 'mandi-01',
     mandiName: 'Karnal Central APMC Mandi',
     slotId: 'slot-01',
@@ -270,6 +270,35 @@ class InMemoryDb {
   }
 }
 
+// Slots are one-hour windows. The demo UI sends short ids (slot-08); the
+// database stores one row per mandi/day so the same clock hour can exist at
+// every mandi without violating the globally unique slot id.
+const SLOT_HOURS: Record<string, number> = {
+  'slot-06': 6,
+  'slot-07': 7,
+  'slot-08': 8,
+  'slot-09': 9,
+  'slot-10': 10,
+  'slot-11': 11,
+  'slot-12': 12,
+  'slot-13': 13,
+};
+
+function slotWindowFor(rawSlotId: string) {
+  const key = rawSlotId.split(':').pop() || 'slot-08';
+  const start = new Date();
+  start.setHours(SLOT_HOURS[key] ?? 8, 0, 0, 0);
+  const end = new Date(start.getTime() + 60 * 60 * 1000);
+  return { start, end, day: start.toISOString().slice(0, 10) };
+}
+
+function formatSlotTime(value: Date | string): string {
+  return new Date(value).toLocaleTimeString('en-IN', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 // ------------------------------------------------------
 // 2. Prisma implementation – thin wrapper exposing the same method names
 // ------------------------------------------------------
@@ -303,30 +332,73 @@ const prismaDb = {
     });
 
     return bookings.map((booking) => {
-      if (booking.mandi) {
-        const dist = calculateHaversineDistance(
-          booking.farmerLat,
-          booking.farmerLon,
-          booking.mandi.latitude,
-          booking.mandi.longitude
-        );
-        return { ...booking, distanceKm: dist };
-      }
-      return { ...booking, distanceKm: undefined };
+      const slot = booking.slot
+        ? {
+            ...booking.slot,
+            windowStart: formatSlotTime(booking.slot.startTime),
+            windowEnd: formatSlotTime(booking.slot.endTime),
+          }
+        : null;
+      const distanceKm = booking.mandi
+        ? calculateHaversineDistance(
+            booking.farmerLat,
+            booking.farmerLon,
+            booking.mandi.latitude,
+            booking.mandi.longitude
+          )
+        : undefined;
+      return { ...booking, slot, distanceKm } as unknown as Booking;
     });
   },
   async getBookingById(id: string): Promise<Booking | null> {
     return await prisma.booking.findUnique({ where: { id } });
   },
   async createBooking(data: CreateBookingData): Promise<Booking> {
-    const { farmerId, ...rest } = data;
-    const dataToCreate: Record<string, unknown> = { ...rest };
-    if (data.farmerId) {
-      dataToCreate.farmerId = data.farmerId;
-    }
-    const created = await prisma.booking.create({
-      data: dataToCreate as any,
+    const { farmerId, slotId: requestedSlot, ...rest } = data;
+    const rawSlot = requestedSlot || 'slot-08';
+    const window = slotWindowFor(rawSlot);
+    const slotId = rawSlot.includes(':')
+      ? rawSlot
+      : `${data.mandiId}:${rawSlot}:${window.day}`;
+
+    await prisma.slot.upsert({
+      where: { id: slotId },
+      update: {
+        mandiId: data.mandiId,
+        startTime: window.start,
+        endTime: window.end,
+      },
+      create: {
+        id: slotId,
+        mandiId: data.mandiId,
+        startTime: window.start,
+        endTime: window.end,
+        isBooked: false,
+      },
     });
+
+    const ratePerQuintal = data.cropType.includes('Wheat') ? 2275 : 3850;
+    const created = await prisma.booking.create({
+      data: {
+        ...rest,
+        farmerId: data.farmerId,
+        slotId,
+        status: 'CONFIRMED',
+        ratePerQuintal,
+      } as any,
+    });
+
+    await Promise.all([
+      prisma.slot.update({ where: { id: slotId }, data: { isBooked: true } }),
+      prisma.mandi.update({
+        where: { id: data.mandiId },
+        data: {
+          allocatedTodayKg: { increment: data.estimatedKg },
+          activeQueueCount: { increment: 1 },
+        },
+      }),
+    ]);
+
     return created as unknown as Booking;
   },
   async verifyGateEntry(rfidTag: string): Promise<{ success: boolean; message?: string; booking?: Booking }> {

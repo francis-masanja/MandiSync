@@ -111,6 +111,19 @@ export function createUser(input: {
       return { ok: false, reason: 'exists' };
     }
 
+    // On a read-only deployment the file store does not know about accounts
+    // created in the database. Check the database too before writing, so a
+    // second sign-up cannot replace an existing password.
+    if (process.env.DATABASE_URL) {
+      try {
+        const { default: prisma } = await import('@/server/prisma');
+        const databaseUser = await prisma.user.findUnique({ where: { email } });
+        if (databaseUser) return { ok: false, reason: 'exists' };
+      } catch (error) {
+        console.error('Could not check the database for an existing user:', error);
+      }
+    }
+
     const user: User = {
       id: randomUUID(),
       name,
